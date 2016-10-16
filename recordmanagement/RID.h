@@ -18,6 +18,15 @@ public:
 	}
 	~RID() {}
 
+	bool getAll(int &fileID, int &pageID, int &slotID) const {
+		if (mFileID == -1 || mPageID == -1 || mSlotID == -1) {
+			return false;
+		}
+		fileID = mFileID;
+		pageID = mPageID;
+		slotID = mSlotID;
+		return true;
+	}
 	bool getPageNum(int &fileID, int &pageID) const {
 		if (mFileID == -1 || mPageID == -1) {
 			return false;
@@ -32,6 +41,16 @@ public:
 		}
 		slotID = mSlotID;
 		return true;
+	}
+	bool isValid() const {
+		return mFileID != -1 && mPageID != -1 && mSlotID != -1;
+	}
+
+	bool operator < (const RID &rid) const {
+		int fileID, pageID, slotID;
+		rid.getPageNum(fileID, pageID);
+		rid.getSlotID(slotID);
+		return mFileID < fileID || (mFileID == fileID && (mPageID < pageID || (mPageID == pageID && mSlotID < slotID)));
 	}
 };
 

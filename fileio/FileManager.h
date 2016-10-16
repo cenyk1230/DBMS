@@ -102,8 +102,7 @@ public:
 	 * 返回:操作成功，返回true
 	 */
 	bool createFile(const char* name) {
-		_createFile(name);
-		return true;
+		return _createFile(name) == 0;
 	}
 	/*
 	 * @函数名openFile
@@ -115,9 +114,17 @@ public:
 	bool openFile(const char* name, int& fileID) {
 		fileID = fm->findLeftOne();
 		fm->setBit(fileID, 0);
-		_openFile(name, fileID);
-		return true;
+		return _openFile(name, fileID) == 0;
 	}
+
+	/*
+	 * created by cenyk1230
+	 */
+	bool destroyFile(const char *name) {
+		return remove(name) == 0;
+	}
+
+
 	int newType() {
 		int t = tm->findLeftOne();
 		tm->setBit(t, 0);

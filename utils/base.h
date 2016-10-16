@@ -2,8 +2,7 @@
 #define __BASE_H__
 
 enum AttrType {
-	INT,
-	FLOAT,
+	INTEGER,
 	STRING
 };
 

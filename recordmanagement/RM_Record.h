@@ -3,18 +3,35 @@
 
 #include "RID.h"
 
+#include "../utils/pagedef.h"
+
 class RM_Record {
 private:
+	int mSize;
 	char *mData;
+	RID mRid;
+
 public:
-	RM_Record() {}
-	~RM_Record() {}
-
-	bool getData(char *&pData) const {
-		pData = mData;
+	RM_Record(char *pData, int size, RID rid) {
+		mSize = size;
+		mData = new char[mSize];
+		memcpy(mData, pData, size);
+		mRid = rid;
 	}
-	bool getRid(RID &rid) const {
+	~RM_Record() {
+		if (mData != NULL)
+			delete[] mData;
+		mData = NULL;
+	}
 
+	char *getData() const {
+		return mData;
+	}
+	RID getRid() const {
+		return mRid;
+	}
+	RM_Record getCopy() const {
+		return RM_Record(mData, mSize, mRid);
 	}
 };
 

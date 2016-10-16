@@ -1,14 +1,39 @@
 #ifndef __RM_FILE_HANDLE_H__
 #define __RM_FILE_HANDLE_H__
 
+#include <vector>
+#include <memory>
+
 #include "RID.h"
 #include "RM_Record.h"
 
+#include "../utils/pagedef.h"
+#include "../bufmanager/BufPageManager.h"
+
 class RM_FileHandle {
+private:
+	bool mModified;
+	int mFileID;
+	int mRecordSize;
+	int mPageNum;
+	int mSlotNum;
+	int mRecordOffset;
+	BufPageManager *mBufPageManager;
+	std::vector<bool> mAvailablePage;
+
+private:
+	RID getNewRid();
+	void initPage(int pageID);
+	void writeBackHeaderPage();
+	void checkPageAvailable(int pageID);
+
 public:
-	RM_FileHandle();
+	RM_FileHandle(BufPageManager *bpm, int fileID);
 	~RM_FileHandle();
 
+	int getFileID() const;
+	int getPageNum() const;
+	bool getAllRecFromPage(int pageID, vector<shared_ptr<RM_Record> > &recordVector);
 	bool getRec(const RID &rid, RM_Record &rec) const;
 	bool insertRec(const char *pData, RID &rid);
 	bool deleteRec(const RID &rid);
