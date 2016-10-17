@@ -87,7 +87,7 @@ bool RM_FileScan::openScan(RM_FileHandle *fileHandle,
 
 bool RM_FileScan::getNextRec(RM_Record &rec) {
     if (mCurIndex < mRecordVector.size()) {
-        rec = mRecordVector[mCurIndex]->getCopy();
+        rec = *mRecordVector[mCurIndex];
         ++mCurIndex;
         return true;
     }

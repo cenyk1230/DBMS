@@ -3,6 +3,7 @@
 
 #include "RID.h"
 #include <cstring>
+#include <cstdio>
 
 #include "../utils/pagedef.h"
 
@@ -13,26 +14,51 @@ private:
 	RID mRid;
 
 public:
-	RM_Record(char *pData, int size, RID rid) {
+	RM_Record() {
+		mData = NULL;
+	}
+	RM_Record(const char *pData, int size, RID rid) {
 		mSize = size;
 		mData = new char[mSize];
 		memcpy(mData, pData, size);
 		mRid = rid;
 	}
+	RM_Record(const RM_Record &rec) {
+		// fprintf(stdout, "copy construction\n");
+		if (mData != NULL) {
+			delete[] mData;
+		}
+		mSize = rec.getSize();
+		mData = new char[mSize];
+		memcpy(mData, rec.getData(), mSize);
+		mRid = rec.getRid();
+	}
 	~RM_Record() {
+		// fprintf(stdout, "%p\n", mData);
 		if (mData != NULL)
 			delete[] mData;
 		mData = NULL;
 	}
+	RM_Record& operator =(const RM_Record &rec) {
+		// fprintf(stdout, "assignment operator\n");
+		if (mData != NULL) {
+			delete[] mData;
+		}
+		mSize = rec.getSize();
+		mData = new char[mSize];
+		memcpy(mData, rec.getData(), mSize);
+		mRid = rec.getRid();
+		return *this;
+	}
 
+	int getSize() const {
+		return mSize;
+	}
 	char *getData() const {
 		return mData;
 	}
 	RID getRid() const {
 		return mRid;
-	}
-	RM_Record getCopy() const {
-		return RM_Record(mData, mSize, mRid);
 	}
 };
 

@@ -1,5 +1,6 @@
 #include <vector>
 #include <memory>
+#include <cstdio>
 
 #include "RM_FileHandle.h"
 
@@ -133,6 +134,9 @@ bool RM_FileHandle::getRec(const RID &rid, RM_Record &rec) const {
     int index;
     BufType uData = mBufPageManager->getPage(fileID, pageID, index);
     char *data = (char *)uData;
+    if (data[slotID] == 0) {
+        return false;
+    }
     data = data + mRecordOffset + mRecordSize * slotID;
     rec = RM_Record(data, mRecordSize, rid);
     return true;
@@ -184,9 +188,9 @@ bool RM_FileHandle::updateRec(const RM_Record &rec) {
     return true;
 }
 
-bool RM_FileHandle::forcePages(int fileID, int pageID) const {
+bool RM_FileHandle::forcePage(int pageID) const {
     int index = -1;
-    mBufPageManager->getPage(fileID, pageID, index);
+    mBufPageManager->getPage(mFileID, pageID, index);
     if (index == -1) {
         return false;
     }

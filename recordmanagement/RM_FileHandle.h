@@ -38,7 +38,7 @@ public:
 	bool insertRec(const char *pData, RID &rid);
 	bool deleteRec(const RID &rid);
 	bool updateRec(const RM_Record &rec);
-	bool forcePages(int fileID, int pageID) const;
+	bool forcePage(int pageID) const;
 };
 
 #endif // __RM_FILE_HANDLE_H__
