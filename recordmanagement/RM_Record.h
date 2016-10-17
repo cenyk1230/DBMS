@@ -2,6 +2,7 @@
 #define __RM_RECORD_H__
 
 #include "RID.h"
+#include <cstring>
 
 #include "../utils/pagedef.h"
 
