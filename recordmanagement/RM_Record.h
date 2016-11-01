@@ -1,10 +1,10 @@
 #ifndef __RM_RECORD_H__
 #define __RM_RECORD_H__
 
-#include "RID.h"
 #include <cstring>
 #include <cstdio>
 
+#include "../utils/RID.h"
 #include "../utils/pagedef.h"
 
 class RM_Record {

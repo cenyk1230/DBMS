@@ -4,9 +4,9 @@
 #include <vector>
 #include <memory>
 
-#include "RID.h"
 #include "RM_Record.h"
 
+#include "../utils/RID.h"
 #include "../utils/pagedef.h"
 #include "../bufmanager/BufPageManager.h"
 

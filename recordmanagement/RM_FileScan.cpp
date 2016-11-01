@@ -1,6 +1,5 @@
 #include <memory>
 
-#include "RID.h"
 #include "RM_Record.h"
 #include "RM_FileScan.h"
 
