@@ -4,8 +4,21 @@
 #include "../utils/base.h"
 #include "../utils/RID.h"
 
+#define IX_EOF
+
 class IX_IndexScan {
 private:
+    AttrType dataType;
+    int dataLength;
+    int current_pos;
+    std::vector<std::pair<void *, RID> > allIndexes;
+    CompOp condition_op;
+    void * condition_val_ptr;
+    union common_type{
+        int integer;
+        float real;
+        char * string;
+    };
 
 public:
     IX_IndexScan();
