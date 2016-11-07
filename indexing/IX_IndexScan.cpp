@@ -3,7 +3,7 @@
 IX_IndexScan::IX_IndexScan() {
     dataLength = 0;
     current_pos = 0;
-    contidion_val_ptr = NULL;
+    condition_val_ptr = NULL;
 }
 
 IX_IndexScan::~IX_IndexScan() {
@@ -79,10 +79,10 @@ bool IX_IndexScan::satisfy(int indexNum){
             valueHolder_condition.string = (char *)condition_val_ptr;
             stringCompareResult = 0;
             for (int i = 0; i < dataLength; ++i) {
-                if (valueHolder_index.string[i] < valueHolder_condition[i]) {
+                if (valueHolder_index.string[i] < valueHolder_condition.string[i]) {
                     stringCompareResult = -1;
                     break;
-                } else if (valueHolder_index.string[i] > valueHolder_condition[i]) {
+                } else if (valueHolder_index.string[i] > valueHolder_condition.string[i]) {
                     stringCompareResult = 1;
                     break;
                 }
@@ -144,5 +144,5 @@ bool IX_IndexScan::getNextEntry(RID &rid) {
 bool IX_IndexScan::closeScan() {
     dataLength = 0;
     current_pos = 0;
-    contidion_val_ptr = NULL;
+    condition_val_ptr = NULL;
 }
