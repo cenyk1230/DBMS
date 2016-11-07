@@ -8,17 +8,23 @@
 
 class BPlusNode {
 public:
-    bool mIsLeaf;
-    int mNum;
-    int mBranch;
-    BPlusNode *mParent;
-    void **mKey;
-    RID *mData;
-    BPlusNode **mSon;
+    bool isLeaf;
+    int num;
+    int branch;
+    int no;
+    AttrType attrType;
+    int attrLength;
+    BPlusNode *parent;
+    BPlusNode *left, *right;
+    void **key;
+    RID *data;
+    BPlusNode **son;
 
 public:
-    BPlusNode(int branch);
+    BPlusNode(int branch, AttrType attrType, int attrLength);
     ~BPlusNode();
+
+    void setKey(int index, void *pData);
 
 };
 
@@ -46,6 +52,7 @@ public:
     void insertEntry(void *pData, const RID &rid);
     bool deleteEntry(void *pData, const RID &rid);
     void getAllEntry(std::vector<std::pair<void *, RID> > &entries);
+    BPlusNode* getRoot();
 };
 
 #endif // __B_PLUS_TREE_H__

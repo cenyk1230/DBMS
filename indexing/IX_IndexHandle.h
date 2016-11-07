@@ -12,16 +12,21 @@
 
 class IX_IndexHandle {
 private:
-    bool mModified;
     int mFileID;
     AttrType mAttrType;
     int mAttrLength;
     int mPageNum;
+    int mBranch;
+    int mTotal;
     BPlusTree *mBPlusTree;
     BufPageManager *mBufPageManager;
 
 private:
-    void writeBackHeaderPage();
+    void calcNo(BPlusNode *node);
+    void storeHeaderPage();
+    void loadBPlusTree();
+    void storeBPlusTree();
+    void storeBPlusNode(BPlusNode *node);
 
 public:
     IX_IndexHandle(BufPageManager *bpm, int fileID);

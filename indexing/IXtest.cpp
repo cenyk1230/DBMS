@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include "IX_Manager.h"
+#include "IX_IndexScan.h"
 #include "IX_IndexHandle.h"
 
 using namespace std;
@@ -35,15 +36,35 @@ int main() {
     if (!flag) {
         cout << "delete entry unsuccessfully  pData = " << &data2 << " RID = (1, 0, 0)" << endl;
     }
-    flag = indexHandle->deleteEntry((void *)&data2, rid2);
-    if (flag) {
-        cout << "delete entry successfully  pData = " << &data2 << " RID = (1, 0, 1)" << endl;
-    }
+    // flag = indexHandle->deleteEntry((void *)&data2, rid2);
+    // if (flag) {
+    //     cout << "delete entry successfully  pData = " << &data2 << " RID = (1, 0, 1)" << endl;
+    // }
 
     flag = im->closeIndex(indexHandle);
     if (flag) {
         cout << "close index successfully" << endl;
     }
+
+    flag = im->openIndex("test", 0, indexHandle);
+    if (flag) {
+        cout << "reopen index successfully" << endl;
+    }
+
+    IX_IndexScan indexScan;
+    flag = indexScan.openScan(indexHandle, NO_OP, NULL);
+    if (flag) {
+        cout << "open scan successfully" << endl;
+    }
+
+    RID rid;
+    flag = indexScan.getNextEntry(rid);
+    if (flag) {
+        cout << "get next entry successfully" << endl;
+    }
+
+    cout << "RID = " << rid.fileID << " " << rid.pageID << " " << rid.slotID << endl; 
+
     flag = im->destroyIndex("test", 0);
     if (flag) {
         cout << "destroy index successfully" << endl;

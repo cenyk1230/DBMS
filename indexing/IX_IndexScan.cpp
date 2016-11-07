@@ -11,6 +11,9 @@ IX_IndexScan::~IX_IndexScan() {
 }
 
 bool IX_IndexScan::satisfy(int indexNum){
+    if (condition_op == NO_OP || condition_val_ptr == NULL) {
+        return true;
+    }
     another_common_type valueHolder_index, valueHolder_condition;
     int stringCompareResult = 0;
     switch(dataType){
@@ -35,9 +38,6 @@ bool IX_IndexScan::satisfy(int indexNum){
                     break;
                 case NE_OP: 
                     return valueHolder_index.integer != valueHolder_condition.integer;
-                    break;
-                case NO_OP: 
-                    return true;
                     break;
                 default: 
                     return false;
@@ -65,9 +65,6 @@ bool IX_IndexScan::satisfy(int indexNum){
                     break;
                 case NE_OP: 
                     return valueHolder_index.real != valueHolder_condition.real;
-                    break;
-                case NO_OP:
-                    return true;
                     break;
                 default: 
                     return false;
@@ -106,9 +103,6 @@ bool IX_IndexScan::satisfy(int indexNum){
                 case NE_OP: 
                     return stringCompareResult != 0;
                     break;
-                case NO_OP:
-                    return true;
-                    break;
                 default: 
                     return false;
                     break;
@@ -127,10 +121,13 @@ bool IX_IndexScan::openScan(IX_IndexHandle *indexHandle, CompOp compOp, void *va
     condition_op = compOp;
     condition_val_ptr = value;
     indexHandle->getAllEntry(allIndexes);
+    return true;
 }
 
 bool IX_IndexScan::getNextEntry(RID &rid) {
+    //cout << "getNextEntry begin" << endl;
     while(current_pos < allIndexes.size()){
+        //cout << current_pos << endl;
         if(satisfy(current_pos)){
             rid = allIndexes[current_pos++].second;
             return true;
@@ -138,6 +135,7 @@ bool IX_IndexScan::getNextEntry(RID &rid) {
         //else
         ++current_pos;
     }
+    //cout << "getNextEntry end" << endl;
     return false;
 }
 
@@ -145,4 +143,5 @@ bool IX_IndexScan::closeScan() {
     dataLength = 0;
     current_pos = 0;
     condition_val_ptr = NULL;
+    return true;
 }

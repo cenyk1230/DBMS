@@ -2,61 +2,56 @@
 #define __RID_H__
 
 class RID {
-private:
-	int mFileID;
-	int mPageID;
-	int mSlotID;
+public:
+	int fileID;
+	int pageID;
+	int slotID;
 
 public:
 	RID() {
-		mFileID = mPageID = mSlotID = -1;
+		fileID = pageID = slotID = -1;
 	}
 	RID(int fileID, int pageID, int slotID) {
-		mFileID = fileID;
-		mPageID = pageID;
-		mSlotID = slotID;
+		this->fileID = fileID;
+		this->pageID = pageID;
+		this->slotID = slotID;
 	}
 	~RID() {}
 
 	bool getAll(int &fileID, int &pageID, int &slotID) const {
-		if (mFileID == -1 || mPageID == -1 || mSlotID == -1) {
+		if (this->fileID == -1 || this->pageID == -1 || this->slotID == -1) {
 			return false;
 		}
-		fileID = mFileID;
-		pageID = mPageID;
-		slotID = mSlotID;
+		fileID = this->fileID;
+		pageID = this->pageID;
+		slotID = this->slotID;
 		return true;
 	}
 	bool getPageNum(int &fileID, int &pageID) const {
-		if (mFileID == -1 || mPageID == -1) {
+		if (this->fileID == -1 || this->pageID == -1) {
 			return false;
 		}
-		fileID = mFileID;
-		pageID = mPageID;
+		fileID = this->fileID;
+		pageID = this->pageID;
 		return true;
 	}
 	bool getSlotID(int &slotID) const {
-		if (mSlotID == -1) {
+		if (this->slotID == -1) {
 			return false;
 		}
-		slotID = mSlotID;
+		slotID = this->slotID;
 		return true;
 	}
 	bool isValid() const {
-		return mFileID != -1 && mPageID != -1 && mSlotID != -1;
+		return this->fileID != -1 && this->pageID != -1 && this->slotID != -1;
 	}
 
 	bool operator < (const RID &rid) const {
-		int fileID, pageID, slotID;
-		rid.getPageNum(fileID, pageID);
-		rid.getSlotID(slotID);
-		return mFileID < fileID || (mFileID == fileID && (mPageID < pageID || (mPageID == pageID && mSlotID < slotID)));
+		return fileID < rid.fileID || (fileID == rid.fileID && (pageID < rid.pageID || (pageID == rid.pageID && slotID < rid.slotID)));
 	}
 
 	bool operator == (const RID &rid) const {
-		int fileID, pageID, slotID;
-		rid.getAll(fileID, pageID, slotID);
-		return fileID == mFileID && pageID == mPageID && slotID == mSlotID; 
+		return fileID == rid.fileID && pageID == rid.pageID && slotID == rid.slotID; 
 	}
 
 	bool operator != (const RID &rid) const {

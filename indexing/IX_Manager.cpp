@@ -19,7 +19,7 @@ string IX_Manager::getIndexFileName(const char *fileName, int indexNo) {
     char indexBuf[20];
     sprintf(indexBuf, "%d", indexNo);
     string indexNoStr = indexBuf;
-    return fileNameStr + indexNoStr;
+    return fileNameStr + "." + indexNoStr;
 }
 
 bool IX_Manager::createIndex(const char *fileName, int indexNo, AttrType attrType, int attrLength) {
@@ -62,7 +62,7 @@ bool IX_Manager::openIndex(const char *fileName, int indexNo, IX_IndexHandle *&i
 
 bool IX_Manager::closeIndex(IX_IndexHandle *indexHandle) {
     int fileID = indexHandle->getFileID();
-    mBufPageManager->close();
+    indexHandle->forcePages();
     delete indexHandle;
     return mFileManager->closeFile(fileID);
 }
