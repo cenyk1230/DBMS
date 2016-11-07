@@ -14,11 +14,12 @@ private:
     std::vector<std::pair<void *, RID> > allIndexes;
     CompOp condition_op;
     void * condition_val_ptr;
-    union common_type{
+    union another_common_type{
         int integer;
         float real;
         char * string;
     };
+    bool satisfy(int indexNum);
 
 public:
     IX_IndexScan();
