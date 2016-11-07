@@ -1,6 +1,8 @@
 #ifndef __B_PLUS_TREE_H__
 #define __B_PLUS_TREE_H__
 
+#include <vector>
+
 #include "../utils/base.h"
 #include "../utils/RID.h"
 
@@ -30,6 +32,7 @@ private:
 private:
     void dfs(BPlusNode *node);
     bool lessThan(void *pData, void *key);
+    BPlusNode* getFirstDataNode();
     BPlusNode* search(BPlusNode *node, void *pData);
     void insertInLeaf(BPlusNode *node, void *pData, const RID &rid);
     void insertInInternal(BPlusNode *node, BPlusNode *sonNode, void *pData);
@@ -42,6 +45,7 @@ public:
 
     void insertEntry(void *pData, const RID &rid);
     bool deleteEntry(void *pData, const RID &rid);
+    void getAllEntry(std::vector<std::pair<void *, RID> > &entries);
 };
 
 #endif // __B_PLUS_TREE_H__

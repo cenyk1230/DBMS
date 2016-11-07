@@ -126,7 +126,7 @@ bool IX_IndexScan::openScan(IX_IndexHandle *indexHandle, CompOp compOp, void *va
     allIndexes.clear();
     condition_op = compOp;
     condition_val_ptr = value;
-    indexHandle->getAllRec(allIndexes);
+    indexHandle->getAllEntry(allIndexes);
 }
 
 bool IX_IndexScan::getNextEntry(RID &rid) {

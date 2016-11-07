@@ -34,7 +34,7 @@ public:
     int getFileID() const;
     AttrType getAttrType() const;
     int getAttrLength() const;
-    void getAllRec(std::vector<std::pair<void *, RID> > &recordVector);
+    void getAllEntry(std::vector<std::pair<void *, RID> > &entries);
 };
 
 #endif // __IX_INDEX_HANDLE_H__

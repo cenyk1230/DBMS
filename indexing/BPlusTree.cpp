@@ -217,3 +217,22 @@ bool BPlusTree::deleteEntry(void *pData, const RID &rid) {
     BPlusNode *node = search(mRoot, pData);
     return deleteInLeaf(node, pData, rid);
 }
+
+BPlusNode* BPlusTree::getFirstDataNode() {
+    BPlusNode *node = mRoot;
+    while (!node->mIsLeaf) {
+        node = node->mSon[0];
+    }
+    return node;
+}
+
+void BPlusTree::getAllEntry(vector<pair<void *, RID> > &entries) {
+    BPlusNode *node = getFirstDataNode();
+    entries.clear();
+    while (node != NULL) {
+        for (int i = 0; i < node->mNum; ++i) {
+            entries.push_back(make_pair(node->mKey[i], node->mData[i]));
+        }
+        node = node->mSon[mBranch - 1];
+    }
+}

@@ -43,6 +43,7 @@ bool IX_IndexHandle::deleteEntry(void *pData, const RID &rid) {
 
 bool IX_IndexHandle::forcePages() {
     mBufPageManager->close();
+    return true;
 }
 
 int IX_IndexHandle::getFileID() const {
@@ -57,6 +58,6 @@ int IX_IndexHandle::getAttrLength() const {
     return mAttrLength;
 }
 
-void getAllRec(vector<pair<void *, RID> > &recordVector) {
-    
+void IX_IndexHandle::getAllEntry(vector<pair<void *, RID> > &entries) {
+    mBPlusTree->getAllEntry(entries);
 }
