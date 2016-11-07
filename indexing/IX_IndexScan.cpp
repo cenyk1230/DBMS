@@ -10,8 +10,8 @@ IX_IndexScan::~IX_IndexScan() {
     // Do nothing
 }
 
-bool satisfy(int indexNum){
-    common_type valueHolder_index, valueHolder_condition;
+bool IX_IndexScan::satisfy(int indexNum){
+    another_common_type valueHolder_index, valueHolder_condition;
     int stringCompareResult = 0;
     switch(dataType){
         case INTEGER:
