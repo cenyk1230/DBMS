@@ -31,14 +31,15 @@ public:
 	RM_FileHandle(BufPageManager *bpm, int fileID);
 	~RM_FileHandle();
 
-	int getFileID() const;
-	int getPageNum() const;
-	bool getAllRecFromPage(int pageID, vector<shared_ptr<RM_Record> > &recordVector);
 	bool getRec(const RID &rid, RM_Record &rec) const;
 	bool insertRec(const char *pData, RID &rid);
 	bool deleteRec(const RID &rid);
 	bool updateRec(const RM_Record &rec);
 	bool forcePage(int pageID) const;
+
+	int getFileID() const;
+	int getPageNum() const;
+	bool getAllRecFromPage(int pageID, vector<shared_ptr<RM_Record> > &recordVector);
 };
 
 #endif // __RM_FILE_HANDLE_H__

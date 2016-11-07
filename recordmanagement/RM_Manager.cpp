@@ -55,5 +55,5 @@ bool RM_Manager::closeFile(RM_FileHandle *fileHandle) {
 	int fileID = fileHandle->getFileID();
 	mBufPageManager->close();
 	delete fileHandle;
-	return true;
+	return mFileManager->closeFile(fileID);
 }

@@ -52,6 +52,16 @@ public:
 		rid.getSlotID(slotID);
 		return mFileID < fileID || (mFileID == fileID && (mPageID < pageID || (mPageID == pageID && mSlotID < slotID)));
 	}
+
+	bool operator == (const RID &rid) const {
+		int fileID, pageID, slotID;
+		rid.getAll(fileID, pageID, slotID);
+		return fileID == mFileID && pageID == mPageID && slotID == mSlotID; 
+	}
+
+	bool operator != (const RID &rid) const {
+		return !(*this == rid);
+	}
 };
 
 #endif // __RID_H__

@@ -1,9 +1,12 @@
+#include <cmath>
 #include <memory>
 
 #include "RM_Record.h"
 #include "RM_FileScan.h"
 
 using namespace std;
+
+static const double EPS = 1e-6;
 
 RM_FileScan::RM_FileScan() {}
 
@@ -23,14 +26,26 @@ bool RM_FileScan::satisfyCondition(shared_ptr<RM_Record> ptrRec,
     data = data + attrOffset;
     if (attrType == INTEGER) {
         int attrValue = *((int *)data);
-        int iValue = *((int *)value);
+        int intValue = *((int *)value);
         switch (compOp) {
-            case EQ_OP: return attrValue == iValue;
-            case LT_OP: return attrValue < iValue;
-            case GT_OP: return attrValue > iValue;
-            case LE_OP: return attrValue <= iValue;
-            case GE_OP: return attrValue >= iValue;
-            case NE_OP: return attrValue != iValue;
+            case EQ_OP: return attrValue == intValue;
+            case LT_OP: return attrValue < intValue;
+            case GT_OP: return attrValue > intValue;
+            case LE_OP: return attrValue <= intValue;
+            case GE_OP: return attrValue >= intValue;
+            case NE_OP: return attrValue != intValue;
+            default: return false;
+        }
+    } else if (attrType == FLOAT) {
+        float attrValue = *((float *)data);
+        float floatValue = *((float *)value);
+        switch (compOp) {
+            case EQ_OP: return fabs(attrValue - floatValue) < EPS;
+            case LT_OP: return attrValue < floatValue;
+            case GT_OP: return attrValue > floatValue;
+            case LE_OP: return attrValue <= floatValue;
+            case GE_OP: return attrValue >= floatValue;
+            case NE_OP: return fabs(attrValue - floatValue) > EPS;
             default: return false;
         }
     } else if (attrType == STRING) {
