@@ -15,7 +15,7 @@ bool IX_IndexScan::satisfy(int indexNum){
     int stringCompareResult = 0;
     switch(dataType){
         case INTEGER:
-            valueHolder_index.integer = *(int *)condition_val_ptr;
+            valueHolder_index.integer = *(int *)allIndexes[indexNum].first;
             valueHolder_condition.integer = *(int *)condition_val_ptr;
             switch(condition_op){
                 case EQ_OP:
@@ -45,7 +45,7 @@ bool IX_IndexScan::satisfy(int indexNum){
             }
             break;
         case FLOAT:
-            valueHolder_index.real = *(float *)condition_val_ptr;
+            valueHolder_index.real = *(float *)allIndexes[indexNum].first;
             valueHolder_condition.real = *(float *)condition_val_ptr;
             switch(condition_op){
                 case EQ_OP:
@@ -75,7 +75,7 @@ bool IX_IndexScan::satisfy(int indexNum){
             }
             break;
         case STRING:
-            valueHolder_index.string = (char *)condition_val_ptr;
+            valueHolder_index.string = (char *)allIndexes[indexNum].first;
             valueHolder_condition.string = (char *)condition_val_ptr;
             stringCompareResult = 0;
             for (int i = 0; i < dataLength; ++i) {
