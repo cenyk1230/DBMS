@@ -4,14 +4,13 @@
 
 using namespace std;
 
-IX_Manager::IX_Manager(FileManager *fm) {
+IX_Manager::IX_Manager(FileManager *fm, BufPageManager *bpm) {
     mFileManager = fm;
-    mBufPageManager = new BufPageManager(fm);
+    mBufPageManager = bpm;
 }
 
 IX_Manager::~IX_Manager() {
-    delete mFileManager;
-    delete mBufPageManager;
+
 }
 
 string IX_Manager::getIndexFileName(const char *fileName, int indexNo) {

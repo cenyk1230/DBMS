@@ -7,7 +7,9 @@
 using namespace std;
 
 int main() {
-    IX_Manager *im = new IX_Manager(new FileManager());
+    FileManager *fm = new FileManager();
+    BufPageManager *bpm = new BufPageManager(fm);
+    IX_Manager *im = new IX_Manager(fm, bpm);
     bool flag; 
     flag = im->createIndex("test", 0, INTEGER, 4);
     if (flag) {
@@ -70,6 +72,8 @@ int main() {
         cout << "destroy index successfully" << endl;
     }
 
+    delete fm;
+    delete bpm;
     delete im;
     return 0;
 }

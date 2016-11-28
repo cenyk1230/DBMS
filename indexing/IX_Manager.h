@@ -18,7 +18,7 @@ private:
     std::string getIndexFileName(const char *fileName, int indexNo);
 
 public:
-    IX_Manager(FileManager *fm);
+    IX_Manager(FileManager *fm, BufPageManager *bpm);
     ~IX_Manager();
     bool createIndex(const char *fileName, int indexNo, AttrType attrType, int attrLength);
     bool destroyIndex(const char *fileName, int indexNo);
