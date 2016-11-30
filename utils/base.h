@@ -19,7 +19,7 @@ enum CompOp {
 
 struct AttrInfo {
 	bool nullable;
-	char *attrName;
+	const char *attrName;
 	AttrType attrType;
 	int attrLength;
 };

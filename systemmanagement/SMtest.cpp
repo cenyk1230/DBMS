@@ -19,11 +19,12 @@ int main() {
     char tableName2[20] = "TestTable2";
     int attrCount = 3;
     AttrInfo *attributes = new AttrInfo[attrCount];
+    char **pData = new char*[attrCount];
     for (int i = 0; i < attrCount; ++i) {
-        attributes[i].attrName = new char[20];
-        attributes[i].attrName[0] = 'a' + i;
-        for (int j = 1; j < 20; ++j)
-            attributes[i].attrName[j] = 0;
+        pData[i] = new char[20];
+        memset(pData[i], 0, sizeof(char) * 20);
+        pData[i][0] = 'a' + i;
+        attributes[i].attrName = pData[i];
         attributes[i].attrType = (AttrType)(i % 3);
         attributes[i].attrLength = 4;
     }
@@ -40,6 +41,10 @@ int main() {
 
     sm->dropDB(DBName);
 
+    for (int i = 0; i < attrCount; ++i) {
+        delete[] pData[i];
+    }
+    delete[] pData;
     delete[] attributes;
 
     delete fm;
