@@ -53,6 +53,7 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->str = $3->str;
   $$->stmttype = Node::CREATE_TABLE;
   $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
+  $$->primary = $5->primary;
 }  | DROP TABLE IDENTIFIER ';'
 {
   $$ = new StmtNode();
@@ -69,12 +70,13 @@ ColumnList: Column ',' ColumnList // Use stack
 {
   $$->subtree.assign($3->subtree.begin(), $3->subtree.end());
   $$->subtree.push_back($1);
+  $$->primary = $3->primary;
 } | Column{
   $$ = new ColumnListNode();
   $$->subtree.push_back($1);
 } | PrimaryColumn{
   $$ = new ColumnListNode();
-  $$->subtree.push_back($1);
+  $$->primary = $1->str;
 };
 
 Column: IDENTIFIER Type '(' NUMBER ')' {

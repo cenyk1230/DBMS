@@ -18,6 +18,12 @@ class Node{
       case 1:
         res = "varchar";
         break;
+      case 2:
+        res = "float";
+        break;
+      case 3:
+        res = "string";
+        break;
       default:
         res = "";
         break;
@@ -132,7 +138,6 @@ class StmtNode: public Node{
         break;
       case SHOW_DATABASE:
         printf("SHOW DATABASE %s\n", str.c_str());
-        printf("|\t+++\n|\t+@+\n|\t+++\n");
         break;
       case CREATE_TABLE:
         printf("TABLE %s IS\n", str.c_str());
@@ -150,7 +155,6 @@ class StmtNode: public Node{
         break;
       case SHOW_TABLE:
         printf("SHOW TABLE %s\n", str.c_str());
-        printf("I've set alarms at:\nColumns 1 through 8\n7\t8\t9\t10\t11\t12\t13\t14\nColumn 9\n15\n");
         break;
       default:
         break;
