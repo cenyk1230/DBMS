@@ -35,7 +35,7 @@ bool SM_Manager::createDB(const char *DBName) {
 
     char attrcat[MAX_NAME_LEN + 20];
     sprintf(attrcat, "%s/attrcat", DBName);
-    mRMManager->createFile(attrcat, MAX_NAME_LEN * 2 + 16);
+    mRMManager->createFile(attrcat, MAX_NAME_LEN * 2 + 20);
 
     return true;
 }
@@ -121,7 +121,7 @@ bool SM_Manager::createTable(const char *tableName, const char *primaryKey, vect
     mRMManager->openFile(attrcat.c_str(), handle);
     int offset = 0;
     for (int i = 0; i < attrCount; ++i) {
-        pData = new char[MAX_NAME_LEN * 2 + 16];
+        pData = new char[MAX_NAME_LEN * 2 + 20];
         for (int i = 0; i < MAX_NAME_LEN; ++i) {
             if (i < len)
                 pData[i] = tableName[i];
@@ -144,6 +144,7 @@ bool SM_Manager::createTable(const char *tableName, const char *primaryKey, vect
             data[3] = 0;
         else
             data[3] = -1;
+        data[4] = (unsigned int)attributes[i].nullable;
         
         handle->insertRec(pData, rid);
         offset += attributes[i].attrLength;
@@ -172,13 +173,14 @@ bool SM_Manager::dropTable(const char *tableName) {
             string tableNameTmp(pData);
             if (tableNameStr != tableNameTmp)
                 continue;
-            BufType data = (BufType)(pData + MAX_NAME_LEN * 2);
+            BufType data = (BufType)(pData + MAX_NAME_LEN);
             indexNo = data[2];
         }
     }
     mRMManager->closeFile(handle);
     string fullTableName = mDBName + "/" + string(tableName);
-    mIXManager->destroyIndex(fullTableName.c_str(), indexNo);
+    if (indexNo != -1)
+        mIXManager->destroyIndex(fullTableName.c_str(), indexNo);
     return mRMManager->destroyFile(fullTableName.c_str());
 }
 
@@ -210,7 +212,8 @@ bool SM_Manager::showTable(const char *tableName) {
                 default: break;
             }
             fprintf(stdout, "attrLength: %d, ", data[2]);
-            fprintf(stdout, "indexNo: %d\n", data[3]);
+            fprintf(stdout, "indexNo: %d, ", data[3]);
+            fprintf(stdout, "nullable: %d\n", data[4]);
         }
     }
     mRMManager->closeFile(handle);

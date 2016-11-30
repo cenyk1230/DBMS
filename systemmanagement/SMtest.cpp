@@ -14,7 +14,7 @@ SM_Manager *sm;
 int main(int argc, char* argv[]){
   FILE *fin;
   if(argc < 2)
-    fin = stdin;
+    fin = fopen("test.sql", "r");
   else
     fin = fopen(argv[1], "r");
   yyset_in(fin);
