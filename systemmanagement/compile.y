@@ -15,7 +15,7 @@ extern Node* setRoot(Node *p);
 
 ALL: StmtList
 {
-  $$ = $1;ype
+  $$ = $1;
   setRoot($$);
 };
 

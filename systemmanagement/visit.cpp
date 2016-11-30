@@ -1,5 +1,6 @@
 #include "userdef.h"
 #include <vector>
+#include "SM_Manager.h"
 AttrType adapt(int type){
   switch(type){
     case Node::INTEGER:
