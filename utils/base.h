@@ -17,4 +17,11 @@ enum CompOp {
 	NO_OP
 };
 
+struct AttrInfo {
+	bool nullable;
+	char *attrName;
+	AttrType attrType;
+	int attrLength;
+};
+
 #endif // __BASE_H__
