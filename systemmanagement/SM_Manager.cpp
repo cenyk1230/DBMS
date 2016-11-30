@@ -3,8 +3,11 @@
 #include <cstring>
 #include <cassert>
 #include <string>
+#include <vector>
 
 #include "SM_Manager.h"
+
+using namespace std;
 
 static const int MAX_NAME_LEN = 20; 
 
@@ -72,13 +75,18 @@ bool SM_Manager::showDB(const char *DBName) {
     return true;
 }
 
-bool SM_Manager::createTable(const char *tableName, int attrCount, AttrInfo *attributes, int primaryKey) {
+bool SM_Manager::createTable(const char *tableName, const char *primaryKey, vector<AttrInfo> attributes) {
     //cerr << "SM_Manager::createTable begin" << endl;
     assert(mDBName != "");
 
+    int attrCount = attributes.size();
     int recordSize = 0;
+    int primaryNum = -1;
     for (int i = 0; i < attrCount; ++i) {
-        recordSize += attributes->attrLength;
+        recordSize += attributes[i].attrLength;
+        if (strcmp(primaryKey, attributes[i].attrName) == 0) {
+            primaryNum = i;
+        }
     }
     string fullTableName = mDBName + "/" + string(tableName);
     mRMManager->createFile(fullTableName.c_str(), recordSize);
@@ -99,7 +107,7 @@ bool SM_Manager::createTable(const char *tableName, int attrCount, AttrInfo *att
     BufType data = (BufType)(pData + MAX_NAME_LEN);
     data[0] = recordSize;
     data[1] = attrCount;
-    data[2] = primaryKey;
+    data[2] = primaryNum;
     handle->insertRec(pData, rid);
     mRMManager->closeFile(handle);
     delete[] pData;
@@ -127,7 +135,7 @@ bool SM_Manager::createTable(const char *tableName, int attrCount, AttrInfo *att
         data[0] = offset;
         data[1] = (unsigned int)attributes[i].attrType;
         data[2] = attributes[i].attrLength;
-        if (primaryKey == i)
+        if (primaryNum == i)
             data[3] = 0;
         else
             data[3] = -1;
@@ -176,7 +184,8 @@ bool SM_Manager::showTable(const char *tableName) {
                 case STRING: fprintf(stdout, "string, "); break;
                 default: break;
             }
-            fprintf(stdout, "attrLength: %d\n", data[2]);
+            fprintf(stdout, "attrLength: %d, ", data[2]);
+            fprintf(stdout, "indexNo: %d\n", data[3]);
         }
     }
     mRMManager->closeFile(handle);

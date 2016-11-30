@@ -1,8 +1,12 @@
 #include <cstdio>
+#include <vector>
 
 #include "SM_Manager.h"
 
 using namespace std;
+
+const int NAMES_LEN[3] = {2, 5, 4};
+const char NAMES[3][10] = {"id", "score", "name"};
 
 int main() {
     FileManager *fm = new FileManager();
@@ -15,29 +19,27 @@ int main() {
     sm->createDB(DBName);
     sm->useDB(DBName);
     
-    char tableName1[20] = "TestTable1";
-    char tableName2[20] = "TestTable2";
+    char tableName[20] = "TestTable";
     int attrCount = 3;
-    AttrInfo *attributes = new AttrInfo[attrCount];
+    vector<AttrInfo> attributes;
+    AttrInfo info;
     char **pData = new char*[attrCount];
     for (int i = 0; i < attrCount; ++i) {
         pData[i] = new char[20];
         memset(pData[i], 0, sizeof(char) * 20);
-        pData[i][0] = 'a' + i;
-        attributes[i].attrName = pData[i];
-        attributes[i].attrType = (AttrType)(i % 3);
-        attributes[i].attrLength = 4;
+        memcpy(pData[i], NAMES[i], sizeof(char) * NAMES_LEN[i]);
+        info.attrName = pData[i];
+        info.attrType = (AttrType)(i % 3);
+        info.attrLength = i % 3 == 2 ? 20 : 4;
+        attributes.push_back(info);
     }
-    sm->createTable(tableName1, attrCount, attributes, -1);
-    sm->createTable(tableName2, attrCount, attributes, -1);
+    sm->createTable(tableName, "id", attributes);
 
     sm->showDB(DBName);
 
-    sm->showTable(tableName1);
-    sm->showTable(tableName2);
+    sm->showTable(tableName);
 
-    sm->dropTable(tableName1);
-    sm->dropTable(tableName2);
+    sm->dropTable(tableName);
 
     sm->dropDB(DBName);
 
@@ -45,7 +47,6 @@ int main() {
         delete[] pData[i];
     }
     delete[] pData;
-    delete[] attributes;
 
     delete fm;
     delete bpm;
