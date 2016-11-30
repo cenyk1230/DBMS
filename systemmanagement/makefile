@@ -6,3 +6,5 @@ all: SMtest
 
 SMtest: $(SOURCES) $(HEADERS)
 	g++ $(SOURCES) -o SMtest $(CPPFLAGS)
+clean:
+	rm SMtest

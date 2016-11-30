@@ -121,7 +121,9 @@ public:
 	 * created by cenyk1230
 	 */
 	bool destroyFile(const char *name) {
-		return remove(name) == 0;
+		string command = "rm " + string(name);
+		system(command.c_str());
+		return true;
 	}
 
 

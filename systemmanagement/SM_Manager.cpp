@@ -88,6 +88,11 @@ bool SM_Manager::createTable(const char *tableName, const char *primaryKey, vect
             primaryNum = i;
         }
     }
+    if (primaryNum != -1) {
+        string fullTableName = mDBName + "/" + string(tableName);
+        mIXManager->createIndex(fullTableName.c_str(), primaryNum, attributes[primaryNum].attrType, attributes[primaryNum].attrLength);
+    }
+
     string fullTableName = mDBName + "/" + string(tableName);
     mRMManager->createFile(fullTableName.c_str(), recordSize);
 
@@ -150,11 +155,31 @@ bool SM_Manager::createTable(const char *tableName, const char *primaryKey, vect
 }
 
 bool SM_Manager::dropTable(const char *tableName) {
-    int indexNo = 0;
-    for (int i = 0; i < indexNo; ++i) {
-        mIXManager->destroyIndex(tableName, i);
+    RM_FileHandle *handle;
+    string relcat = mDBName + "/relcat";
+    mRMManager->openFile(relcat.c_str(), handle);
+
+    int indexNo = -1;
+    string tableNameStr(tableName);
+    int pageNum = handle->getPageNum();
+    vector<shared_ptr<RM_Record> > records;
+    for (int i = 0; i < pageNum; ++i) {
+        handle->getAllRecFromPage(i, records);
+        int num = records.size();
+        for (int j = 0; j < num; ++j) {
+            shared_ptr<RM_Record> rec = records[j];
+            char *pData = rec->getData();
+            string tableNameTmp(pData);
+            if (tableNameStr != tableNameTmp)
+                continue;
+            BufType data = (BufType)(pData + MAX_NAME_LEN * 2);
+            indexNo = data[2];
+        }
     }
-    return mRMManager->destroyFile(tableName);
+    mRMManager->closeFile(handle);
+    string fullTableName = mDBName + "/" + string(tableName);
+    mIXManager->destroyIndex(fullTableName.c_str(), indexNo);
+    return mRMManager->destroyFile(fullTableName.c_str());
 }
 
 bool SM_Manager::showTable(const char *tableName) {
