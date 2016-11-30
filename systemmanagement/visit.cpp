@@ -1,6 +1,9 @@
 #include "userdef.h"
 #include <vector>
 #include "SM_Manager.h"
+
+extern SM_Manager *sm;
+
 AttrType adapt(int type){
   switch(type){
     case Node::INTEGER:
@@ -18,16 +21,16 @@ void StmtNode::visit(){
   AttrType t_type;
   switch(stmttype){
     case CREATE_DATABASE:
-      createDB(str.c_str());
+      sm->createDB(str.c_str());
       break;
     case USE_DATABASE:
-      useDB(str.c_str());
+      sm->useDB(str.c_str());
       break;
     case DROP_DATABASE:
-      dropDB(str.c_str());
+      sm->dropDB(str.c_str());
       break;
     case SHOW_DATABASE:
-      showDB(str.c_str());
+      sm->showDB(str.c_str());
       break;
     case CREATE_TABLE:
       for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
@@ -39,17 +42,17 @@ void StmtNode::visit(){
         clist.push_back(t);
       }
       if(primary.empty()){
-        createTable(str.c_str(), "", clist);
+        sm->createTable(str.c_str(), "", clist);
       } 
       else{
-        createTable(str.c_str(), primary.c_str(), clist);
+        sm->createTable(str.c_str(), primary.c_str(), clist);
       }
       break;
     case DROP_TABLE:
-      dropTable(str.c_str());
+      sm->dropTable(str.c_str());
       break;
     case SHOW_TABLE:
-      showTable(str.c_str());
+      sm->showTable(str.c_str());
       break;
     default:
       break;

@@ -7,16 +7,16 @@
 int yyparse(void);
 void yyerror(char* s);
 int yywrap();
-extern Node* setRoot(Node *p);
 
 %}
-%token CREATE TABLE PRIMARY KEY NOT NULLSIGN INTEGER VARCHAR NUMBER IDENTIFIER DATABASE DROP SHOW USE FLOAT STRING
+%token CREATE TABLE PRIMARY KEY NOT NULLSIGN INT_INPUT VARCHAR_INPUT NUMBER IDENTIFIER DATABASE DROP SHOW USE FLOAT_INPUT STRING_INPUT
 %%
 
 ALL: StmtList
 {
   $$ = $1;
-  setRoot($$);
+  $$->visit();
+  $$->print();
 };
 
 StmtList: Stmt StmtList
@@ -95,16 +95,16 @@ PrimaryColumn: PRIMARY KEY '(' IDENTIFIER ')' {
   $$->str = $4->str;
 };
 
-Type: INTEGER {
+Type: INT_INPUT {
   $$ = new Node();
   $$->datatype = Node::INTEGER;
-} | VARCHAR {
+} | VARCHAR_INPUT {
   $$ = new Node();
   $$->datatype = Node::VARCHAR;
-} | FLOAT {
+} | FLOAT_INPUT {
   $$ = new Node();
   $$->datatype = Node::FLOAT;
-} | STRING {
+} | STRING_INPUT {
   $$ = new Node();
   $$->datatype = Node::STRING;
 };

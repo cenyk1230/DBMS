@@ -43,10 +43,10 @@ whitespace ([ \n\t])+
 {null}    {return NULLSIGN;}
 {comma}   {return ',';}
 {semicolon} {return ';';}
-{int}       {return INTEGER;}
-{varchar} {return VARCHAR;}
-{float}   {return FLOAT;}
-{string}  {return STRING;}
+{int}       {return INT_INPUT;}
+{varchar} {return VARCHAR_INPUT;}
+{float}   {return FLOAT_INPUT;}
+{string}  {return STRING_INPUT;}
 {lp}      {return '(';}
 {rp}      {return ')';}
 {number}  {yylval = new Node(); sscanf(yytext, "%d", &yylval->number); return NUMBER;}

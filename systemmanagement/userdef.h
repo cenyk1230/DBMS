@@ -156,6 +156,7 @@ class StmtNode: public Node{
         break;
     }
   }
+  void visit();
   
   virtual ~StmtNode(){
     for(std::vector<Node *>::iterator i = subtree.begin(); i != subtree.end(); ++i){
@@ -193,22 +194,23 @@ class StmtListNode: public Node{
 
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE
-  enum yytokentype
-  {
-    CREATE = 258,
-    TABLE = 259,
-    PRIMARY = 260,
-    KEY = 261,
-    NOT = 262,
-    NULLSIGN = 263,
-    INTEGER = 264,
-    VARCHAR = 265,
-    NUMBER = 266,
-    IDENTIFIER = 267,
-    DATABASE = 268,
-    DROP = 269,
-    SHOW = 270,
-    USE = 271
+  enum yytokentype {
+     CREATE = 258,
+     TABLE = 259,
+     PRIMARY = 260,
+     KEY = 261,
+     NOT = 262,
+     NULLSIGN = 263,
+     INT_INPUT = 264,
+     VARCHAR_INPUT = 265,
+     NUMBER = 266,
+     IDENTIFIER = 267,
+     DATABASE = 268,
+     DROP = 269,
+     SHOW = 270,
+     USE = 271,
+     FLOAT_INPUT = 272,
+     STRING_INPUT = 273
   };
 #endif
 
