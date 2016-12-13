@@ -2,8 +2,9 @@
 #define __BASE_H__
 
 enum AttrType {
-	INTEGER,
-	STRING
+	INTEGER = 0,
+	FLOAT = 1,
+	STRING = 2
 };
 
 enum CompOp {
@@ -14,6 +15,13 @@ enum CompOp {
 	GE_OP,
 	NE_OP,
 	NO_OP
+};
+
+struct AttrInfo {
+	bool nullable;
+	const char *attrName;
+	AttrType attrType;
+	int attrLength;
 };
 
 #endif // __BASE_H__

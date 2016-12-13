@@ -89,11 +89,11 @@ public:
 	 * 功能:关闭文件
 	 * 返回:操作成功，返回0
 	 */
-	int closeFile(int fileID) {
+	bool closeFile(int fileID) {
 		fm->setBit(fileID, 1);
 		int f = fd[fileID];
 		close(f);
-		return 0;
+		return true;
 	}
 	/*
 	 * @函数名createFile
@@ -121,7 +121,9 @@ public:
 	 * created by cenyk1230
 	 */
 	bool destroyFile(const char *name) {
-		return remove(name) == 0;
+		string command = "rm " + string(name);
+		system(command.c_str());
+		return true;
 	}
 
 

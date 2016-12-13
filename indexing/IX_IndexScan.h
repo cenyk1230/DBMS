@@ -1,6 +1,8 @@
 #ifndef __IX_INDEX_SCAN_H__
 #define __IX_INDEX_SCAN_H__
 
+#include "IX_IndexHandle.h"
+
 #include "../utils/base.h"
 #include "../utils/RID.h"
 

@@ -7,9 +7,9 @@
 using namespace std;
 
 RM_FileHandle::RM_FileHandle(BufPageManager *bpm, int fileID) {
-    mModified = false;
     mBufPageManager = bpm;
     mFileID = fileID;
+    mModified = false;
     int index;
     BufType uData = mBufPageManager->allocPage(mFileID, 0, index, true);
     mRecordSize = (int)uData[0];

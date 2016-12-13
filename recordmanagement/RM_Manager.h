@@ -11,7 +11,7 @@ private:
 	BufPageManager *mBufPageManager;
 	FileManager *mFileManager;
 public:
-	RM_Manager(FileManager *fm);
+	RM_Manager(FileManager *fm, BufPageManager *bpm);
 	~RM_Manager();
 
 	bool createFile(const char *fileName, int recordSize);

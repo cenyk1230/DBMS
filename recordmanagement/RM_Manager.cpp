@@ -3,14 +3,13 @@
 
 #include "../utils/pagedef.h"
 
-RM_Manager::RM_Manager(FileManager *fm) {
+RM_Manager::RM_Manager(FileManager *fm, BufPageManager *bpm) {
 	mFileManager = fm;
-	mBufPageManager = new BufPageManager(fm);
+	mBufPageManager = bpm;
 }
 
 RM_Manager::~RM_Manager() {
-	delete mFileManager;
-	delete mBufPageManager;
+
 }
 
 bool RM_Manager::createFile(const char *fileName, int recordSize) {
@@ -55,5 +54,5 @@ bool RM_Manager::closeFile(RM_FileHandle *fileHandle) {
 	int fileID = fileHandle->getFileID();
 	mBufPageManager->close();
 	delete fileHandle;
-	return true;
+	return mFileManager->closeFile(fileID);
 }

@@ -11,7 +11,9 @@
 using namespace std;
 
 int main() {
-	RM_Manager *manager = new RM_Manager(new FileManager());
+	FileManager *fm = new FileManager();
+    BufPageManager *bpm = new BufPageManager(fm);
+	RM_Manager *manager = new RM_Manager(fm, bpm);
 	RM_FileHandle *handle = NULL;
 	manager->createFile("cyk1230.dbms", 4);
 
@@ -45,5 +47,9 @@ int main() {
 	scan->closeScan();
 	delete scan;
 	manager->closeFile(handle);
+
+	delete fm;
+	delete bpm;
 	delete manager;
+	return 0;
 }
