@@ -9,7 +9,7 @@
 
 using namespace std;
 
-static const int MAX_NAME_LEN = 20; 
+extern const int MAX_NAME_LEN;
 
 SM_Manager::SM_Manager(IX_Manager *ix, RM_Manager *rm) {
     mIXManager = ix;
@@ -75,7 +75,7 @@ bool SM_Manager::showDB(const char *DBName) {
     return true;
 }
 
-bool SM_Manager::createTable(const char *tableName, const char *primaryKey, vector<AttrInfo> attributes) {
+bool SM_Manager::createTable(const char *tableName, const char *primaryKey, const vector<AttrInfo> &attributes) {
     //cerr << "SM_Manager::createTable begin" << endl;
     assert(mDBName != "");
 
@@ -218,4 +218,8 @@ bool SM_Manager::showTable(const char *tableName) {
     }
     mRMManager->closeFile(handle);
     return true;
+}
+
+string SM_Manager::getDBName() {
+    return mDBName;
 }

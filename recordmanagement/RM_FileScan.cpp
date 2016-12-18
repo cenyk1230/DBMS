@@ -6,7 +6,7 @@
 
 using namespace std;
 
-static const double EPS = 1e-6;
+extern const double EPS;
 
 RM_FileScan::RM_FileScan() {}
 
