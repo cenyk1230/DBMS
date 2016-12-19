@@ -16,7 +16,6 @@ ALL: StmtList
 {
   $$ = $1;
   $$->visit();
-  $$->print();
 };
 
 StmtList: Stmt StmtList

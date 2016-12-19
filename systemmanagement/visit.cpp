@@ -1,5 +1,6 @@
 #include "userdef.h"
 #include <vector>
+#include <cstdio>
 #include "SM_Manager.h"
 
 extern SM_Manager *sm;

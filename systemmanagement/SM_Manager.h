@@ -24,9 +24,11 @@ public:
     bool useDB(const char *DBName);
     bool showDB(const char *DBName);
 
-    bool createTable(const char *tableName, const char *primaryKey, std::vector<AttrInfo> attributes);
+    bool createTable(const char *tableName, const char *primaryKey, const std::vector<AttrInfo> &attributes);
     bool dropTable(const char *tableName);
     bool showTable(const char *tableName);
+
+    std::string getDBName();
 };
 
 #endif // __SM_MANAGER_H__
