@@ -33,10 +33,8 @@ public:
     bool remove(const char *tableName, 
                 const std::vector<Condition> &conditions);
     bool update(const char *tableName, 
-                const TableAttr &lAttr,
-                const bool rIsValue,
-                const TableAttr &rAttr,
-                const Value &rValue,
+                const TableAttr &attr,
+                const Value &value,
                 const std::vector<Condition> &conditions);
 };
 

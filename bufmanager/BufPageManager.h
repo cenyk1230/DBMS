@@ -79,6 +79,7 @@ public:
 	 */
 	BufType getPage(int fileID, int pageID, int& index) {
 		index = hash->findIndex(fileID, pageID);
+		//fprintf(stdout, "fileID = %d, pageID = %d, hash index = %d\n", fileID, pageID, index);
 		if (index != -1) {
 			access(index);
 			return addr[index];
