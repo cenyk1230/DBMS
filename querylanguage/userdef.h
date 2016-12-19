@@ -39,7 +39,11 @@ class Node{
     Flags:
     bit 0:
       0 -- nullable
-      1 -- non-nullable    
+      1 -- non-nullable   
+      
+    bit 1:
+      0 -- direct access to column (current table)
+      1 -- full access 
   */
   char flag;
 
@@ -58,6 +62,8 @@ class Node{
   const static int DROP_TABLE = 5;
   const static int SHOW_TABLE = 6;
   const static int SHOW_DATABASE_ALL = 7;
+  const static int INSERT = 8;
+  const static int DELETE = 9;
 
   const static int OP_EQU = 0;
   const static int OP_NEQ = 1;
@@ -122,6 +128,64 @@ class ColumnListNode: public Node{
   }
 };
 
+class RowsNode: public Node{
+  public:
+  void print(){
+    printf("Start of Row List\n");
+    for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
+      (*i)->print();
+    }
+    printf("End of Row List\n");
+  }
+  void visit();
+  virtual ~RowsNode(){
+    for(std::vector<Node *>::iterator i = subtree.begin(); i != subtree.end(); ++i){
+      if(*i != NULL){
+        delete *i;
+        *i = NULL;
+      }
+    }
+  }
+};
+
+class RowNode: public Node{
+  public:
+  void print(){
+    for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
+      (*i)->print();
+      printf("|");
+    }
+    printf("\n");
+  }
+  
+  void visit();
+  
+  virtual ~RowNode(){
+    for(std::vector<Node *>::iterator i = subtree.begin(); i != subtree.end(); ++i){
+      if(*i != NULL){
+        delete *i;
+        *i = NULL;
+      }
+    }
+  }
+};
+
+class ValueNode: public Node{
+  public:
+  void print(){
+    switch(datatype){
+      case INTEGER:
+        printf("%d", number);
+        break;
+      case STRING:
+        printf("%s", str.c_str());
+        break;
+      default:
+        break;
+    }
+  }
+};
+
 class StmtNode: public Node{
   public:
   void print(){
@@ -137,6 +201,9 @@ class StmtNode: public Node{
         break;
       case SHOW_DATABASE:
         printf("SHOW DATABASE %s\n", str.c_str());
+        break;
+      case SHOW_DATABASE_ALL:
+        printf("SHOW DATABASES\n");
         break;
       case CREATE_TABLE:
         printf("TABLE %s IS\n", str.c_str());
@@ -154,6 +221,17 @@ class StmtNode: public Node{
         break;
       case SHOW_TABLE:
         printf("SHOW TABLE %s\n", str.c_str());
+        break;
+        
+      case INSERT:
+        printf("Insert into table \"%s\"\nRecords shown as follow:\n", str.c_str());
+        printf("BEGIN\n");
+        for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
+          (*i)->print();
+        }
+        printf("END\n");
+        break;
+      case DELETE:
         break;
       default:
         break;
@@ -203,18 +281,35 @@ class StmtListNode: public Node{
     TABLE = 259,
     PRIMARY = 260,
     KEY = 261,
-    NOT = 262,
-    NULLSIGN = 263,
-    INT_INPUT = 264,
-    VARCHAR_INPUT = 265,
-    NUMBER = 266,
-    IDENTIFIER = 267,
-    DATABASE = 268,
-    DROP = 269,
-    SHOW = 270,
-    USE = 271,
-    FLOAT_INPUT = 272,
-    STRING_INPUT = 273
+    IDENTIFIER = 262,
+    DATABASE = 263,
+    DROP = 264,
+    SHOW = 265,
+    USE = 266,
+    DATABASES = 267,
+    SELECT = 268,
+    INSERT = 269,
+    INTO = 270,
+    DELETE = 271,
+    FROM = 272,
+    WHERE = 273,
+    VALUES = 274,
+    NUMBER = 275,
+    CONSTSTR = 276,
+    AND = 277,
+    IS = 278,
+    NOT = 279,
+    NULLSIGN = 280,
+    EQU = 281,
+    NEQ = 282,
+    LEQ = 283,
+    GEQ = 284,
+    LES = 285,
+    GTR = 286,
+    INT_INPUT = 287,
+    VARCHAR_INPUT = 288,
+    FLOAT_INPUT = 289,
+    STRING_INPUT = 290
   };
 #endif
 

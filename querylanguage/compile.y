@@ -12,6 +12,7 @@ int yywrap();
 %token CREATE TABLE PRIMARY KEY IDENTIFIER DATABASE DROP SHOW USE 
 %token DATABASES SELECT INSERT INTO DELETE FROM WHERE VALUES
 %token NUMBER CONSTSTR 
+%token AND IS NOT NULLSIGN
 %token EQU NEQ LEQ GEQ LES GTR
 %token INT_INPUT VARCHAR_INPUT FLOAT_INPUT STRING_INPUT
 %%
@@ -88,13 +89,13 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
 };
 
-Rows: Row ',' Rows
+Rows: '(' Row ')' ',' Rows
 {
-  $$->subtree.assign($3->subtree.begin(), $3->subtree.end());
-  $$->subtree.push_back($1);
-} | Row {
+  $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
+  $$->subtree.push_back($2);
+} | '(' Row ')' {
   $$ = new RowsNode();
-  $$->subtree.push_back($1);
+  $$->subtree.push_back($2);
 }
 
 Row: Value
@@ -109,10 +110,12 @@ Row: Value
 
 Value: NUMBER
 {
+  $$ = new ValueNode();
   $$->number = $1->number;
   $$->datatype = Node::INTEGER;
 } | CONSTSTR
 {
+  $$ = new ValueNode();
   $$->str = $1->str;
   $$->datatype = Node::STRING;
 }
@@ -137,6 +140,20 @@ WhereClause: ColumnAccess Op Value
 } | ColumnAccess IS NOT NULLSIGN
 {
 
+}
+
+ColumnAccess: IDENTIFIER
+{
+  $$ = new Node();
+  $$->str = $1->str;
+  $$->flag = $$->flag & '\xFD';
+  
+} | IDENTIFIER '.' IDENTIFIER
+{
+  $$ = new Node();
+  $$->primary = $1->str;
+  $$->str = $3->str;
+  $$->flag = $$->flag | '\x02';
 }
 
 ColumnList: Column ',' ColumnList // Use stack
@@ -183,6 +200,26 @@ Type: INT_INPUT {
   $$ = new Node();
   $$->datatype = Node::STRING;
 };
+
+Op: EQU {
+  $$ = new Node();
+  $$->datatype = Node::OP_EQU;
+} | NEQ {
+  $$ = new Node();
+  $$->datatype = Node::OP_NEQ;
+} | LEQ {
+  $$ = new Node();
+  $$->datatype = Node::OP_LEQ;
+} | GEQ {
+  $$ = new Node();
+  $$->datatype = Node::OP_GEQ;
+} | LES {
+  $$ = new Node();
+  $$->datatype = Node::OP_LES;
+} | GTR {
+  $$ = new Node();
+  $$->datatype = Node::OP_GTR;
+}
 %%
 /*
 int main()

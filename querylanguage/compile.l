@@ -92,7 +92,14 @@ whitespace ([ \n\t])+
 {lp}      {return '(';}
 {rp}      {return ')';}
 {number}  {yylval = new Node(); sscanf(yytext, "%d", &yylval->number); return NUMBER;}
-{conststr}  {yylval = new Node(); sscanf(yytext, "%s", yylval->str); return CONSTSTR;}
+{conststr}  {
+  yylval = new Node(); 
+  for(int i = 0; yytext[i]; ++i){
+    if(yytext[i] != '\'')
+      yylval->str.push_back(yytext[i]);
+  } 
+  return CONSTSTR;
+}
 {identifier}  {
   yylval = new Node();
   for(int i = 0; yytext[i]; ++i){
