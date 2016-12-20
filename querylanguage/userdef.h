@@ -2,7 +2,7 @@
 #define USERDEF_H_
 #include <string>
 #include <vector>
-#include "SM_Manager.h"
+#include "../systemmanagement/SM_Manager.h"
 
 typedef AttrInfo Column;
 class Node{
@@ -30,6 +30,34 @@ class Node{
     }
     return res;
   }
+
+  std::string OpToString(int type){
+    std::string res;
+    switch(type){
+      case OP_EQU:
+        res = "=";
+        break;
+      case OP_NEQ:
+        res = "!=";
+        break;
+      case OP_LEQ:
+        res = "<=";
+        break;
+      case OP_GEQ:
+        res = ">=";
+        break;
+      case OP_LES:
+        res = "<";
+        break;
+      case OP_GTR:
+        res = ">";
+        break;
+      default:
+        res = "-*- error -*-";
+        break;
+    }
+    return res;
+  }
   public:
   int number;
   std::string str;
@@ -44,6 +72,14 @@ class Node{
     bit 1:
       0 -- direct access to column (current table)
       1 -- full access 
+
+    bit 2:
+      0 -- Right operand is value
+      1 -- Right operand is column access
+
+    bit 3:
+      0 -- Where clause is logical statement
+      1 -- Where clause is null judgement
   */
   char flag;
 
@@ -74,6 +110,24 @@ class Node{
 
   int stmttype;
   int datatype;
+
+  inline static char setFlag(char flag, int bit, bool val){
+    char res;
+    bit = bit % 8;
+    if(val == true){
+      res = flag | (1 << bit);
+    }
+    else{
+      res = flag & (~(1 << bit));
+    }
+    return res;
+  }
+
+  inline static bool getFlag(char flag, int bit){
+    bit = bit % 8;
+    return ((flag >> bit) & 1) == 1;
+  }
+
   Node(){
     flag = 0;
     stmttype = datatype = -1;
@@ -128,6 +182,64 @@ class ColumnListNode: public Node{
   }
 };
 
+class WhereListNode: public Node{
+  public:
+  void print(){
+    printf("Where ");
+    for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
+      if(i != subtree.rbegin())
+        printf("AND ");
+      (*i)->print();
+    }
+  }
+  virtual ~WhereListNode(){
+    for(std::vector<Node *>::iterator i = subtree.begin(); i != subtree.end(); ++i){
+      if(*i != NULL){
+        delete *i;
+        *i = NULL;
+      }
+    }
+  }
+};
+
+class WhereNode: public Node{
+  public:
+  void print(){
+    if(getFlag(flag, 3)){
+      if(getFlag(flag, 0)){
+        subtree[0]->print();
+        printf(" is NOT null\n");
+      }
+      else{
+        subtree[0]->print();
+        printf(" is null\n");
+      }
+    }
+    else{
+      if(getFlag(flag, 2)){
+        subtree[0]->print();
+        printf(" %s ", OpToString(datatype).c_str());
+        subtree[1]->print();
+        printf("\n");
+      }
+      else{
+        subtree[0]->print();
+        printf(" %s ", OpToString(datatype).c_str());
+        subtree[1]->print();
+        printf("\n");
+      }
+    }
+  }
+  virtual ~WhereNode(){
+    for(std::vector<Node *>::iterator i = subtree.begin(); i != subtree.end(); ++i){
+      if(*i != NULL){
+        delete *i;
+        *i = NULL;
+      }
+    }
+  }
+};
+
 class RowsNode: public Node{
   public:
   void print(){
@@ -166,6 +278,18 @@ class RowNode: public Node{
         delete *i;
         *i = NULL;
       }
+    }
+  }
+};
+
+class AccessNode: public Node{
+  public:
+  void print(){
+    if(getFlag(flag, 1)){
+      printf("%s of table %s", str.c_str(), primary.c_str());
+    }
+    else{
+      printf("%s", str.c_str());
     }
   }
 };
@@ -232,6 +356,13 @@ class StmtNode: public Node{
         printf("END\n");
         break;
       case DELETE:
+        printf("Delete from table \"%s\"\n", str.c_str());
+        printf("Where ");
+        for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
+          if(i != subtree.rbegin())
+            printf("AND ");
+          (*i)->print();
+        }
         break;
       default:
         break;
@@ -272,6 +403,8 @@ class StmtListNode: public Node{
     }
   }
 };
+
+
 
 #ifndef YYTOKENTYPE
 # define YYTOKENTYPE

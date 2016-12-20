@@ -461,9 +461,9 @@ static const yytype_uint8 yyrline[] =
 {
        0,    20,    20,    29,    33,    37,    42,    46,    51,    56,
       61,    68,    73,    78,    84,    92,    96,   101,   105,   111,
-     116,   123,   126,   131,   134,   137,   140,   145,   151,   159,
-     164,   167,   172,   177,   185,   190,   193,   196,   199,   204,
-     207,   210,   213,   216,   219
+     116,   123,   127,   133,   141,   149,   155,   163,   169,   177,
+     182,   185,   190,   195,   203,   208,   211,   214,   217,   222,
+     225,   228,   231,   234,   237
 };
 #endif
 
@@ -1435,7 +1435,7 @@ yyreduce:
   case 15:
 #line 93 "compile.y" /* yacc.c:1646  */
     {
-  (yyval)->subtree.assign((yyvsp[0])->subtree.begin(), (yyvsp[0])->subtree.end());
+  (yyval) = (yyvsp[0]);
   (yyval)->subtree.push_back((yyvsp[-3]));
 }
 #line 1442 "compile.tab.c" /* yacc.c:1646  */
@@ -1462,7 +1462,7 @@ yyreduce:
   case 18:
 #line 106 "compile.y" /* yacc.c:1646  */
     {
-  (yyval)->subtree.assign((yyvsp[0])->subtree.begin(), (yyvsp[0])->subtree.end());
+  (yyval) = (yyvsp[0]);
   (yyval)->subtree.push_back((yyvsp[-2]));
 }
 #line 1469 "compile.tab.c" /* yacc.c:1646  */
@@ -1471,7 +1471,7 @@ yyreduce:
   case 19:
 #line 112 "compile.y" /* yacc.c:1646  */
     {
-  (yyval) = new Node();
+  (yyval) = new ValueNode();
   (yyval)->number = (yyvsp[0])->number;
   (yyval)->datatype = Node::INTEGER;
 }
@@ -1481,7 +1481,7 @@ yyreduce:
   case 20:
 #line 117 "compile.y" /* yacc.c:1646  */
     {
-  (yyval) = new Node();
+  (yyval) = new ValueNode();
   (yyval)->str = (yyvsp[0])->str;
   (yyval)->datatype = Node::STRING;
 }
@@ -1491,114 +1491,132 @@ yyreduce:
   case 21:
 #line 124 "compile.y" /* yacc.c:1646  */
     {
-
+  (yyval) = new WhereListNode();
+  (yyval)->subtree.push_back((yyvsp[0]));
 }
-#line 1497 "compile.tab.c" /* yacc.c:1646  */
+#line 1498 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 22:
-#line 127 "compile.y" /* yacc.c:1646  */
+#line 128 "compile.y" /* yacc.c:1646  */
     {
-
+  (yyval) = (yyvsp[0]);
+  (yyval)->subtree.push_back((yyvsp[-2]));
 }
-#line 1505 "compile.tab.c" /* yacc.c:1646  */
+#line 1507 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 23:
-#line 132 "compile.y" /* yacc.c:1646  */
+#line 134 "compile.y" /* yacc.c:1646  */
     {
-
+  (yyval) = new WhereNode();
+  (yyval)->datatype = (yyvsp[-1])->datatype;
+  (yyval)->subtree.push_back((yyvsp[-2]));
+  (yyval)->subtree.push_back((yyvsp[0]));
+  (yyval)->flag = Node::setFlag((yyval)->flag, 2, false);
+  (yyval)->flag = Node::setFlag((yyval)->flag, 3, false);
 }
-#line 1513 "compile.tab.c" /* yacc.c:1646  */
+#line 1520 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 24:
-#line 135 "compile.y" /* yacc.c:1646  */
+#line 142 "compile.y" /* yacc.c:1646  */
     {
-
+  (yyval) = new WhereNode();
+  (yyval)->datatype = (yyvsp[-1])->datatype;
+  (yyval)->subtree.push_back((yyvsp[-2]));
+  (yyval)->subtree.push_back((yyvsp[0]));
+  (yyval)->flag = Node::setFlag((yyval)->flag, 2, true);
+  (yyval)->flag = Node::setFlag((yyval)->flag, 3, false);
 }
-#line 1521 "compile.tab.c" /* yacc.c:1646  */
+#line 1533 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 25:
-#line 138 "compile.y" /* yacc.c:1646  */
+#line 150 "compile.y" /* yacc.c:1646  */
     {
-
+  (yyval) = new WhereNode();
+  (yyval)->subtree.push_back((yyvsp[-2]));
+  (yyval)->flag = Node::setFlag((yyval)->flag, 3, true);
+  (yyval)->flag = Node::Node::setFlag((yyval)->flag, 0, false);
 }
-#line 1529 "compile.tab.c" /* yacc.c:1646  */
+#line 1544 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 26:
-#line 141 "compile.y" /* yacc.c:1646  */
+#line 156 "compile.y" /* yacc.c:1646  */
     {
-
+  (yyval) = new WhereNode();
+  (yyval)->subtree.push_back((yyvsp[-3]));
+  (yyval)->flag = Node::setFlag((yyval)->flag, 3, true);
+  (yyval)->flag = Node::setFlag((yyval)->flag, 0, true);
 }
-#line 1537 "compile.tab.c" /* yacc.c:1646  */
+#line 1555 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 27:
-#line 146 "compile.y" /* yacc.c:1646  */
+#line 164 "compile.y" /* yacc.c:1646  */
     {
-  (yyval) = new Node();
+  (yyval) = new AccessNode();
   (yyval)->str = (yyvsp[0])->str;
-  (yyval)->flag = (yyval)->flag & '\xFD';
+  (yyval)->flag = Node::setFlag((yyval)->flag, 1, false);
   
 }
-#line 1548 "compile.tab.c" /* yacc.c:1646  */
+#line 1566 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 28:
-#line 152 "compile.y" /* yacc.c:1646  */
+#line 170 "compile.y" /* yacc.c:1646  */
     {
-  (yyval) = new Node();
+  (yyval) = new AccessNode();
   (yyval)->primary = (yyvsp[-2])->str;
   (yyval)->str = (yyvsp[0])->str;
-  (yyval)->flag = (yyval)->flag | '\x02';
+  (yyval)->flag = Node::setFlag((yyval)->flag, 1, true);
 }
-#line 1559 "compile.tab.c" /* yacc.c:1646  */
+#line 1577 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 29:
-#line 160 "compile.y" /* yacc.c:1646  */
+#line 178 "compile.y" /* yacc.c:1646  */
     {
   (yyval)->subtree.assign((yyvsp[0])->subtree.begin(), (yyvsp[0])->subtree.end());
   (yyval)->subtree.push_back((yyvsp[-2]));
   (yyval)->primary = (yyvsp[0])->primary;
 }
-#line 1569 "compile.tab.c" /* yacc.c:1646  */
+#line 1587 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 30:
-#line 164 "compile.y" /* yacc.c:1646  */
+#line 182 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new ColumnListNode();
   (yyval)->subtree.push_back((yyvsp[0]));
 }
-#line 1578 "compile.tab.c" /* yacc.c:1646  */
+#line 1596 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 31:
-#line 167 "compile.y" /* yacc.c:1646  */
+#line 185 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new ColumnListNode();
   (yyval)->primary = (yyvsp[0])->str;
 }
-#line 1587 "compile.tab.c" /* yacc.c:1646  */
+#line 1605 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 32:
-#line 172 "compile.y" /* yacc.c:1646  */
+#line 190 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new ColumnNode();
   (yyval)->datatype = (yyvsp[-3])->datatype;
   (yyval)->str = (yyvsp[-4])->str;
   (yyval)->number = (yyvsp[-1])->number;
 }
-#line 1598 "compile.tab.c" /* yacc.c:1646  */
+#line 1616 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 33:
-#line 177 "compile.y" /* yacc.c:1646  */
+#line 195 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new ColumnNode();
   (yyval)->datatype = (yyvsp[-5])->datatype;
@@ -1606,110 +1624,110 @@ yyreduce:
   (yyval)->number = (yyvsp[-3])->number;
   (yyval)->flag |= 1;
 }
-#line 1610 "compile.tab.c" /* yacc.c:1646  */
+#line 1628 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 34:
-#line 185 "compile.y" /* yacc.c:1646  */
+#line 203 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->str = (yyvsp[-1])->str;
 }
-#line 1619 "compile.tab.c" /* yacc.c:1646  */
+#line 1637 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 35:
-#line 190 "compile.y" /* yacc.c:1646  */
+#line 208 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::INTEGER;
 }
-#line 1628 "compile.tab.c" /* yacc.c:1646  */
+#line 1646 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 36:
-#line 193 "compile.y" /* yacc.c:1646  */
+#line 211 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::VARCHAR;
 }
-#line 1637 "compile.tab.c" /* yacc.c:1646  */
+#line 1655 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 37:
-#line 196 "compile.y" /* yacc.c:1646  */
+#line 214 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::FLOAT;
 }
-#line 1646 "compile.tab.c" /* yacc.c:1646  */
+#line 1664 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 38:
-#line 199 "compile.y" /* yacc.c:1646  */
+#line 217 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::STRING;
 }
-#line 1655 "compile.tab.c" /* yacc.c:1646  */
+#line 1673 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 39:
-#line 204 "compile.y" /* yacc.c:1646  */
+#line 222 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::OP_EQU;
 }
-#line 1664 "compile.tab.c" /* yacc.c:1646  */
+#line 1682 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 40:
-#line 207 "compile.y" /* yacc.c:1646  */
+#line 225 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::OP_NEQ;
 }
-#line 1673 "compile.tab.c" /* yacc.c:1646  */
+#line 1691 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 41:
-#line 210 "compile.y" /* yacc.c:1646  */
+#line 228 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::OP_LEQ;
 }
-#line 1682 "compile.tab.c" /* yacc.c:1646  */
+#line 1700 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 42:
-#line 213 "compile.y" /* yacc.c:1646  */
+#line 231 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::OP_GEQ;
 }
-#line 1691 "compile.tab.c" /* yacc.c:1646  */
+#line 1709 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 43:
-#line 216 "compile.y" /* yacc.c:1646  */
+#line 234 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::OP_LES;
 }
-#line 1700 "compile.tab.c" /* yacc.c:1646  */
+#line 1718 "compile.tab.c" /* yacc.c:1646  */
     break;
 
   case 44:
-#line 219 "compile.y" /* yacc.c:1646  */
+#line 237 "compile.y" /* yacc.c:1646  */
     {
   (yyval) = new Node();
   (yyval)->datatype = Node::OP_GTR;
 }
-#line 1709 "compile.tab.c" /* yacc.c:1646  */
+#line 1727 "compile.tab.c" /* yacc.c:1646  */
     break;
 
 
-#line 1713 "compile.tab.c" /* yacc.c:1646  */
+#line 1731 "compile.tab.c" /* yacc.c:1646  */
       default: break;
     }
   /* User semantic actions sometimes alter yychar, and that requires
@@ -1937,7 +1955,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 223 "compile.y" /* yacc.c:1906  */
+#line 241 "compile.y" /* yacc.c:1906  */
 
 /*
 int main()

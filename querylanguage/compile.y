@@ -91,7 +91,7 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
 
 Rows: '(' Row ')' ',' Rows
 {
-  $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
+  $$ = $5;
   $$->subtree.push_back($2);
 } | '(' Row ')' {
   $$ = new RowsNode();
@@ -104,7 +104,7 @@ Row: Value
   $$->subtree.push_back($1);
 } | Value ',' Row
 {
-  $$->subtree.assign($3->subtree.begin(), $3->subtree.end());
+  $$ = $3;
   $$->subtree.push_back($1);
 }
 
@@ -122,38 +122,56 @@ Value: NUMBER
 
 WhereClauseList: WhereClause
 {
-
+  $$ = new WhereListNode();
+  $$->subtree.push_back($1);
 } | WhereClause AND WhereClauseList
 {
-
+  $$ = $3;
+  $$->subtree.push_back($1);
 }
 
 WhereClause: ColumnAccess Op Value
 {
-
+  $$ = new WhereNode();
+  $$->datatype = $2->datatype;
+  $$->subtree.push_back($1);
+  $$->subtree.push_back($3);
+  $$->flag = Node::setFlag($$->flag, 2, false);
+  $$->flag = Node::setFlag($$->flag, 3, false);
 } | ColumnAccess Op ColumnAccess
 {
-
+  $$ = new WhereNode();
+  $$->datatype = $2->datatype;
+  $$->subtree.push_back($1);
+  $$->subtree.push_back($3);
+  $$->flag = Node::setFlag($$->flag, 2, true);
+  $$->flag = Node::setFlag($$->flag, 3, false);
 } | ColumnAccess IS NULLSIGN
 {
-
+  $$ = new WhereNode();
+  $$->subtree.push_back($1);
+  $$->flag = Node::setFlag($$->flag, 3, true);
+  $$->flag = Node::Node::setFlag($$->flag, 0, false);
 } | ColumnAccess IS NOT NULLSIGN
 {
-
+  $$ = new WhereNode();
+  $$->subtree.push_back($1);
+  $$->flag = Node::setFlag($$->flag, 3, true);
+  $$->flag = Node::setFlag($$->flag, 0, true);
 }
 
 ColumnAccess: IDENTIFIER
 {
-  $$ = new Node();
+  $$ = new AccessNode();
   $$->str = $1->str;
-  $$->flag = $$->flag & '\xFD';
+  $$->flag = Node::setFlag($$->flag, 1, false);
   
 } | IDENTIFIER '.' IDENTIFIER
 {
-  $$ = new Node();
+  $$ = new AccessNode();
   $$->primary = $1->str;
   $$->str = $3->str;
-  $$->flag = $$->flag | '\x02';
+  $$->flag = Node::setFlag($$->flag, 1, true);
 }
 
 ColumnList: Column ',' ColumnList // Use stack

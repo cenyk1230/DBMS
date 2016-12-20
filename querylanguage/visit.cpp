@@ -1,7 +1,7 @@
 #include "userdef.h"
 #include <vector>
 #include <cstdio>
-#include "SM_Manager.h"
+#include "../systemmanagement/SM_Manager.h"
 
 extern SM_Manager *sm;
 
@@ -61,4 +61,12 @@ void StmtNode::visit(){
     default:
       break;
   }
+}
+
+void RowsNode::visit(){
+
+}
+
+void RowNode::visit(){
+  
 }
