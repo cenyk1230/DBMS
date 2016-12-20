@@ -32,6 +32,7 @@ int main() {
 	fprintf(stdout, "data = 0x%x\n", *((int *)rec.getData()));
 
 	cout << "forcePage: " << handle->forcePage(0) << endl;
+	cout << "forcePage: " << handle->forcePage(1) << endl;
 
 	RM_FileScan *scan = new RM_FileScan();
 	int data4 = 0x2B194837;

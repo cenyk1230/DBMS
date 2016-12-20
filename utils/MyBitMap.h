@@ -15,7 +15,7 @@ using namespace std;
 #define MAX_INNER_NUM 67
 //#define MOD 61
 #define BIAS 5
-static unsigned char h[61];
+extern unsigned char h[61];
 
 
 class MyBitMap {
@@ -57,6 +57,7 @@ protected:
 			umask = 0;
 		}
 		uint w = ((getLeafData(pos) & mask) | umask);
+		//cout << pos << " " << w << endl;
 		setLeafData(pos, w);
 		return pos;
 	}
@@ -195,7 +196,9 @@ public:
 		updateInner(0, 0, p, (size >> BIAS), c);
 	}
 	int findLeftOne() {
+		//fprintf(stdout, "findLeftOne level = %d, index = %d, bit = %d\n", rootLevel, rootIndex, rootBit);
 		int i = _findLeftOne(rootLevel, rootIndex, 0, rootBit);
+		//fprintf(stdout, "findLeftOne i = %d\n", i);
 		/*
 		for (i = 0; i < size;++i){
 			if (data[i] !=0)break;
@@ -205,6 +208,7 @@ public:
 		//cout << data[0] << endl;
 		uint lb = lowbit(getLeafData(i));
 		int index = h[_hash(lb)];
+		//cout << lb << " " << index << " h = " << (int)h[2] << endl;
 		return (i << BIAS) + index;
 	}
 	MyBitMap(int cap, uint k) {

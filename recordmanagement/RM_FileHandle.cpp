@@ -1,6 +1,7 @@
 #include <vector>
 #include <memory>
 #include <cstdio>
+#include <cassert>
 
 #include "RM_FileHandle.h"
 
@@ -112,12 +113,14 @@ int RM_FileHandle::getPageNum() const {
 }
 
 bool RM_FileHandle::getAllRecFromPage(int pageID, vector<shared_ptr<RM_Record> > &recordVector) {
+    assert(pageID > 0);
     int index;
     BufType uData = mBufPageManager->getPage(mFileID, pageID, index);
     char *data = (char *)uData;
     recordVector.clear();
     for (int i = 0; i < mSlotNum; ++i) {
         if (data[i] == 1) {
+            //fprintf(stdout, "i = %d p = %x\n", i, uData);
             char *curData = data + mRecordOffset + mRecordSize * i;
             shared_ptr<RM_Record> ptrRec(new RM_Record(curData, mRecordSize, RID(mFileID, pageID, i)));
             recordVector.push_back(ptrRec);
@@ -148,6 +151,7 @@ bool RM_FileHandle::insertRec(const char *pData, RID &rid) {
     if (!rid.getAll(fileID, pageID, slotID)) {
         return false;
     }
+    //fprintf(stdout, "insert record pageID = %d\n", pageID);
     int index;
     BufType uData = mBufPageManager->getPage(fileID, pageID, index);
     char *data = (char *)uData;

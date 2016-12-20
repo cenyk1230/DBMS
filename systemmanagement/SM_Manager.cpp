@@ -62,7 +62,7 @@ bool SM_Manager::showDB(const char *DBName) {
     int pageNum = handle->getPageNum();
     vector<shared_ptr<RM_Record> > records;
     fprintf(stdout, "DATABASE %s:\n", DBName);
-    for (int i = 0; i < pageNum; ++i) {
+    for (int i = 1; i < pageNum; ++i) {
         handle->getAllRecFromPage(i, records);
         int num = records.size();
         for (int j = 0; j < num; ++j) {
@@ -164,7 +164,7 @@ bool SM_Manager::dropTable(const char *tableName) {
     string tableNameStr(tableName);
     int pageNum = handle->getPageNum();
     vector<shared_ptr<RM_Record> > records;
-    for (int i = 0; i < pageNum; ++i) {
+    for (int i = 1; i < pageNum; ++i) {
         handle->getAllRecFromPage(i, records);
         int num = records.size();
         for (int j = 0; j < num; ++j) {
@@ -193,7 +193,7 @@ bool SM_Manager::showTable(const char *tableName) {
     int pageNum = handle->getPageNum();
     vector<shared_ptr<RM_Record> > records;
     fprintf(stdout, "TABLE %s:\n", tableName);
-    for (int i = 0; i < pageNum; ++i) {
+    for (int i = 1; i < pageNum; ++i) {
         handle->getAllRecFromPage(i, records);
         int num = records.size();
         for (int j = 0; j < num; ++j) {
