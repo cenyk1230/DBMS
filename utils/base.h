@@ -7,9 +7,10 @@ const int MAX_NAME_LEN = 20;
 const double EPS = 1e-6;
 
 enum AttrType {
-	INTEGER = 0,
-	FLOAT = 1,
-	STRING = 2
+	NOTYPE = 0,
+	INTEGER,
+	FLOAT,
+	STRING
 };
 
 enum CompOp {
