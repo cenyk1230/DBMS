@@ -32,6 +32,8 @@ public:
     IX_IndexHandle(BufPageManager *bpm, int fileID);
     ~IX_IndexHandle();
 
+    void printBPlusTree();
+
     void insertEntry(void *pData, const RID &rid);
     bool deleteEntry(void *pData, const RID &rid);
     bool forcePages();

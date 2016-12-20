@@ -21,6 +21,10 @@ IX_IndexHandle::~IX_IndexHandle() {
     delete mBPlusTree;
 }
 
+void IX_IndexHandle::printBPlusTree() {
+    mBPlusTree->print(mBPlusTree->getRoot());
+}
+
 void IX_IndexHandle::storeHeaderPage() {
     int index;
     BufType uData = mBufPageManager->allocPage(mFileID, 0, index, false);
@@ -39,6 +43,7 @@ bool IX_IndexHandle::deleteEntry(void *pData, const RID &rid) {
 }
 
 bool IX_IndexHandle::forcePages() {
+    //printBPlusTree();
     storeBPlusTree();
     return true;
 }
@@ -77,15 +82,15 @@ void IX_IndexHandle::loadBPlusTree() {
         if ((int)uData[3] == 0)
             nodes[i]->parent = NULL;
         else
-            nodes[i]->parent = nodes[(int)uData[3] - 1];
+            nodes[i]->parent = nodes[(int)uData[3]];
         if ((int)uData[4] == 0)
             nodes[i]->left = NULL;
         else
-            nodes[i]->left = nodes[(int)uData[4] - 1];
+            nodes[i]->left = nodes[(int)uData[4]];
         if ((int)uData[5] == 0)
             nodes[i]->right = NULL;
         else
-            nodes[i]->right = nodes[(int)uData[5] - 1];
+            nodes[i]->right = nodes[(int)uData[5]];
         
         for (int j = 0; j < nodes[i]->num; ++j) {
             if (mAttrType == INTEGER || mAttrType == FLOAT) {
@@ -96,7 +101,7 @@ void IX_IndexHandle::loadBPlusTree() {
                 //cout << nodes[i]->data[j].fileID << " " << nodes[i]->data[j].pageID << " " << nodes[i]->data[j].slotID << endl;
                 nodes[i]->son[j] = NULL;
                 if (!nodes[i]->isLeaf) {
-                    cout << (int)uData[6 + j * 5 + 4] << endl;
+                    //cout << (int)uData[6 + j * 5 + 4] << endl;
                     assert((int)uData[6 + j * 5 + 4] > 0);
                     nodes[i]->son[j] = nodes[(int)uData[6 + j * 5 + 4]];
                 } 
