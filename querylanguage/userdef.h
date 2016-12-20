@@ -101,6 +101,9 @@ class Node{
   const static int SHOW_DATABASE_ALL = 7;
   const static int INSERT = 8;
   const static int DELETE = 9;
+  const static int UPDATE = 10;
+  const static int SELECT = 11;
+  const static int SELECT_ALL = 12;
 
   const static int OP_EQU = 0;
   const static int OP_NEQ = 1;
