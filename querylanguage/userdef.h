@@ -249,7 +249,6 @@ class RowsNode: public Node{
     }
     printf("End of Row List\n");
   }
-  void visit();
   virtual ~RowsNode(){
     for(std::vector<Node *>::iterator i = subtree.begin(); i != subtree.end(); ++i){
       if(*i != NULL){
@@ -270,7 +269,6 @@ class RowNode: public Node{
     printf("\n");
   }
   
-  void visit();
   
   virtual ~RowNode(){
     for(std::vector<Node *>::iterator i = subtree.begin(); i != subtree.end(); ++i){
