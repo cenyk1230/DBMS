@@ -1,6 +1,6 @@
 #include <cstdio>
 #include "userdef.h"
-#include "SM_Manager.h"
+#include "../systemmanagement/SM_Manager.h"
 
 extern int yyparse();
 extern void yyset_in (FILE *  _in_str );

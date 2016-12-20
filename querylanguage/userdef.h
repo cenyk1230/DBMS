@@ -149,7 +149,7 @@ class ColumnNode: public Node{
   public:
   void print(){
     printf("COLUMN MAP: (name=>%s, type=>%s, length=>%d", str.c_str(), toString(datatype).c_str(), number);
-    if(flag & 1 != 0){
+    if((flag & 1) != 0){
       printf(", nullable=>FALSE");
     }
     printf(")\n");
