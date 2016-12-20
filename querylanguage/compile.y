@@ -10,7 +10,7 @@ int yywrap();
 
 %}
 %token CREATE TABLE PRIMARY KEY IDENTIFIER DATABASE DROP SHOW USE 
-%token DATABASES SELECT INSERT INTO DELETE FROM WHERE VALUES
+%token DATABASES SELECT INSERT INTO UPDATE DELETE FROM WHERE VALUES SET
 %token NUMBER CONSTSTR 
 %token AND IS NOT NULLSIGN
 %token EQU NEQ LEQ GEQ LES GTR
@@ -87,6 +87,16 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->stmttype = Node::DELETE;
   $$->str = $3->str;
   $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
+} | UPDATE IDENTIFIER SET ColumnAccess EQU Value WhereClauseList
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::UPDATE;
+} | UPDATE IDENTIFIER SET ColumnAccess EQU ColumnAccess WhereClauseList
+{
+
+} | SELECT ColumnAccessList FROM IDENTIFIERLIST WhereClauseList
+{
+
 };
 
 Rows: '(' Row ')' ',' Rows
@@ -118,6 +128,10 @@ Value: NUMBER
   $$ = new ValueNode();
   $$->str = $1->str;
   $$->datatype = Node::STRING;
+} | /*nothing*/
+{
+  $$ = new ValueNode();
+  $$->datatype = Node::NULLDATA;
 }
 
 WhereClauseList: WhereClause

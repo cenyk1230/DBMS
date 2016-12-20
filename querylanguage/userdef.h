@@ -89,6 +89,7 @@ class Node{
   const static int VARCHAR = 1;
   const static int FLOAT = 2;
   const static int STRING = 3;
+  const static int NULLDATA = 4;
 
   const static int CREATE_DATABASE = 0;
   const static int USE_DATABASE = 1;

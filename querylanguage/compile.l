@@ -4,7 +4,7 @@
 
 extern Node* yylval;  
 %}  
-create "CREATE"
+create [Cc][Rr][Ee][Aa][Tt][Ee]
 use "USE"
 drop "DROP"
 show "SHOW"
@@ -23,9 +23,11 @@ into "INTO"
 values "VALUES"
 
 delete "DELETE"
+update "UPDATE"
 select "SELECT"
 from "FROM"
 where "WHERE"
+set [Ss][Ee][Tt]
 
 
 comma ","
@@ -71,9 +73,11 @@ whitespace ([ \n\t])+
 {into}    {return INTO;}
 {values}  {return VALUES;}
 {delete}  {return DELETE;}
+{update}  {return UPDATE;}
 {select}  {return SELECT;}
 {from}    {return FROM;}
 {where}   {return WHERE;}
+{set}     {return SET;}
 
 {comma}   {return ',';}
 {semicolon} {return ';';}
