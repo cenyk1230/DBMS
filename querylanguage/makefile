@@ -7,6 +7,8 @@ all: QLtest
 QLtest: $(SOURCES) $(HEADERS)
 	g++ $(SOURCES) -o QLtest $(CPPFLAGS)
 
+compile.tab.c: compile.y
+	bison compile.y
 clean:
 	rm QLtest
 run:
