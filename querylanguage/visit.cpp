@@ -16,6 +16,8 @@ AttrType adapt(int type){
     case Node::VARCHAR:
     case Node::STRING:
       return AttrType::STRING;
+    case Node::NULLDATA:
+      return AttrType::NOTYPE;
   }
 }
 
@@ -106,6 +108,8 @@ void StmtNode::visit(){
               memcpy(charp, ((*j)->str).c_str(), ((*j)->str).size());
               charp = NULL;
               break;
+            case Node::NULLDATA:
+              vt.data = NULL;
             default:
               break;
           }
@@ -123,6 +127,11 @@ void StmtNode::visit(){
               charp = (char *)(*j).data;
               delete[] charp;
               charp = NULL;
+              break;
+            default:
+              /*
+                Do nothing if Value is NULL
+              */
               break;
           }
         }
@@ -170,9 +179,9 @@ void StmtNode::visit(){
             tt.attrName = (*i)->subtree[0]->str.c_str();
             wt.lAttr = tt;
             // TODO: value assignment
+            vt.attrType = adapt((*i)->subtree[1]->datatype);
             switch((*i)->subtree[1]->datatype){
               case Node::INTEGER:
-                vt.attrType = AttrType::INTEGER;
                 intp = new int;
                 *intp = (*i)->subtree[1]->number;
                 vt.data = (void *) intp;
@@ -180,12 +189,16 @@ void StmtNode::visit(){
                 break;
               case Node::VARCHAR:
               case Node::STRING:
-                vt.attrType = AttrType::STRING;
                 (*i)->subtree[1]->str += "\0";  // Add NULL
                 charp = new char[((*i)->subtree[1]->str).size()];
                 memcpy(charp, ((*i)->subtree[1]->str).c_str(), ((*i)->subtree[1]->str).size());
                 vt.data = (void *) charp;
                 charp = NULL;
+                break;
+              default:
+                /*
+                Value cannot be NULL in a delete statement
+                */
                 break;
             }
             wt.rValue = vt;
