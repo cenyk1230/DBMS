@@ -21,17 +21,17 @@ AttrType adapt(int type){
 
 CompOp opAdapt(int type){
   switch(type){
-    case Node::EQU:
+    case Node::OP_EQU:
       return CompOp::EQ_OP;
-    case Node::NEQ:
+    case Node::OP_NEQ:
       return CompOp::NE_OP;
-    case Node::LEQ:
+    case Node::OP_LEQ:
       return CompOp::LE_OP;
-    case Node::GEQ:
+    case Node::OP_GEQ:
       return CompOp::GE_OP;
-    case Node::LES:
+    case Node::OP_LES:
       return CompOp::LT_OP;
-    case Node::GTR:
+    case Node::OP_GTR:
       return CompOp::GT_OP;
   }
 }
@@ -140,18 +140,18 @@ void StmtNode::visit(){
             // Column
             wt.rIsValue = false;
             if(getFlag((*i)->subtree[0]->flag, 1)){
-              tt.tablename = (*i)->subtree[0]->primary.c_str();
+              tt.tableName = (*i)->subtree[0]->primary.c_str();
             }
             else{
-              tt.tablename = NULL;
+              tt.tableName = NULL;
             }
             tt.attrName = (*i)->subtree[0]->str.c_str();
             wt.lAttr = tt;
             if(getFlag((*i)->subtree[1]->flag, 1)){
-              tt.tablename = (*i)->subtree[1]->primary.c_str();
+              tt.tableName = (*i)->subtree[1]->primary.c_str();
             }
             else{
-              tt.tablename = NULL;
+              tt.tableName = NULL;
             }
             tt.attrName = (*i)->subtree[1]->str.c_str();
             wt.rAttr = tt;
@@ -162,10 +162,10 @@ void StmtNode::visit(){
             wt.rIsValue = true;
             wt.op = opAdapt((*i)->datatype);
             if(getFlag((*i)->subtree[0]->flag, 1)){
-              tt.tablename = (*i)->subtree[0]->primary.c_str();
+              tt.tableName = (*i)->subtree[0]->primary.c_str();
             }
             else{
-              tt.tablename = NULL;
+              tt.tableName = NULL;
             }
             tt.attrName = (*i)->subtree[0]->str.c_str();
             wt.lAttr = tt;
@@ -193,17 +193,17 @@ void StmtNode::visit(){
         }
         wlist.push_back(wt);
       }
-      ql->remove(str.c_str(), wlist);
+      qm->remove(str.c_str(), wlist);
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
-        if((*i)->rIsValue){
-          switch(((*i)->rValue).attrType){
+        if((*i).rIsValue){
+          switch(((*i).rValue).attrType){
             case AttrType::INTEGER:
-              intp = (int *)((*i)->rValue).data;
+              intp = (int *)((*i).rValue).data;
               delete intp;
               intp = NULL;
               break;
             case AttrType::STRING:
-              charp = (char *)((*i)->rValue).data;
+              charp = (char *)((*i).rValue).data;
               delete []charp;
               charp = NULL;
               break;
