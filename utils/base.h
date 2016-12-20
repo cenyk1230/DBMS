@@ -52,7 +52,6 @@ struct Value {
 struct Condition {
 	TableAttr lAttr;
 	CompOp op;
-	bool rIsNull;
 	bool rIsValue;
 	TableAttr rAttr;
 	Value rValue;
