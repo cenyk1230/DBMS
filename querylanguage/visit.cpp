@@ -143,6 +143,36 @@ void StmtNode::visit(){
       for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
         if(getFlag(flag, 3)){
           // Null judgement
+          if(getFlag(flag, 0)){
+            // NOT NULL
+            wt.rIsValue = true;
+            wt.op = CompOp::NE_OP;  //differ
+            wt.rValue.attrType = AttrType::NOTYPE;
+            wt.rValue.data = NULL;
+            if(getFlag((*i)->subtree[0]->flag, 1)){
+              tt.tableName = (*i)->subtree[0]->primary.c_str();
+            }
+            else{
+              tt.tableName = NULL;
+            }
+            tt.attrName = (*i)->subtree[0]->str.c_str();
+            wt.lAttr = tt;
+          }
+          else{
+            // IS NULL
+            wt.rIsValue = true;
+            wt.op = CompOp::EQ_OP;  //differ
+            wt.rValue.attrType = AttrType::NOTYPE;
+            wt.rValue.data = NULL;
+            if(getFlag((*i)->subtree[0]->flag, 1)){
+              tt.tableName = (*i)->subtree[0]->primary.c_str();
+            }
+            else{
+              tt.tableName = NULL;
+            }
+            tt.attrName = (*i)->subtree[0]->str.c_str();
+            wt.lAttr = tt;
+          }
         }
         else{
           if(getFlag(flag, 2)){

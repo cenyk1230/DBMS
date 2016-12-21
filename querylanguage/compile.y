@@ -203,14 +203,24 @@ WhereClause: ColumnAccess Op Value
   $$->flag = Node::setFlag($$->flag, 0, true);
 };
 
-IDENTIFIERLIST:
+IDENTIFIERLIST: IDENTIFIER
 {
-
+  $$ = new Node();
+  $$->subtree.push_back($1);
+} | IDENTIFIER ',' IDENTIFIERLIST
+{
+  $$ = $3;
+  $$->subtree.push_back($1);
 };
 
-ColumnAccessList:
+ColumnAccessList: ColumnAccess
 {
-
+  $$ = new Node();
+  $$->subtree.push_back($1);
+} | ColumnAccess ',' ColumnAccessList
+{
+  $$ = $3;
+  $$->subtree.push_back($1);
 };
 
 
