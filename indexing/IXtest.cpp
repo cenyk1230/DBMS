@@ -20,6 +20,23 @@ int main() {
     if (flag) {
         cout << "open index successfully" << endl;
     }
+    int num = 100000;
+    for (int i = 0; i < num; ++i) {
+        int data = i;
+        RID rid = RID(1, 0, i);
+        //cout << i << " " << endl;
+        indexHandle->insertEntry((void *)&data, rid);
+    }
+    //indexHandle->printBPlusTree();
+    for (int i = 0; i < num; ++i) {
+        int data = i;
+        RID rid = RID(1, 0, i);
+        //cout << i << " " << endl;
+        indexHandle->deleteEntry((void *)&data, rid);
+        //indexHandle->printBPlusTree();
+    }
+    flag = im->closeIndex(indexHandle);
+    return 0;
 
     int data1 = 0x3927F85A;
     RID rid1 = RID(1, 0, 0);

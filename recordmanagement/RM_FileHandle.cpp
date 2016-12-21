@@ -1,6 +1,7 @@
 #include <vector>
 #include <memory>
 #include <cstdio>
+#include <cassert>
 
 #include "RM_FileHandle.h"
 
@@ -37,7 +38,10 @@ RM_FileHandle::~RM_FileHandle() {
 
 RID RM_FileHandle::getNewRid() {
     int pageID = -1, slotID = -1;
+    //fprintf(stdout, "PageNum = %d\n", mPageNum);
     for (int i = 1; i < mPageNum; ++i) {
+        //fprintf(stdout, "size = %d\n", mAvailablePage.size());
+        //fprintf(stdout, "i = %d, mAvailable = %d\n", i, mAvailablePage[i]);
         if (mAvailablePage[i]) {
             pageID = i;
             break;
@@ -61,6 +65,7 @@ RID RM_FileHandle::getNewRid() {
             }
         }
     }
+    //fprintf(stdout, "new rid = (%d,%d,%d)\n", mFileID, pageID, slotID);
     return RID(mFileID, pageID, slotID);
 }
 
@@ -100,7 +105,11 @@ void RM_FileHandle::checkPageAvailable(int pageID) {
             available = true;
             break;
         }
-    mAvailablePage[pageID] = available;
+    //cout << "pageID = " << pageID << "available = " << available << endl;
+    if (mAvailablePage[pageID] != available) {
+        mModified = true;
+        mAvailablePage[pageID] = available;
+    }
 }
 
 int RM_FileHandle::getFileID() const {
@@ -112,12 +121,14 @@ int RM_FileHandle::getPageNum() const {
 }
 
 bool RM_FileHandle::getAllRecFromPage(int pageID, vector<shared_ptr<RM_Record> > &recordVector) {
+    assert(pageID > 0);
     int index;
     BufType uData = mBufPageManager->getPage(mFileID, pageID, index);
     char *data = (char *)uData;
     recordVector.clear();
     for (int i = 0; i < mSlotNum; ++i) {
         if (data[i] == 1) {
+            //fprintf(stdout, "i = %d p = %x\n", i, uData);
             char *curData = data + mRecordOffset + mRecordSize * i;
             shared_ptr<RM_Record> ptrRec(new RM_Record(curData, mRecordSize, RID(mFileID, pageID, i)));
             recordVector.push_back(ptrRec);
@@ -146,6 +157,7 @@ bool RM_FileHandle::insertRec(const char *pData, RID &rid) {
     rid = getNewRid();
     int fileID, pageID, slotID;
     if (!rid.getAll(fileID, pageID, slotID)) {
+        //fprintf(stdout, "insert record pageID = %d, slotID = %d\n", pageID, slotID);
         return false;
     }
     int index;

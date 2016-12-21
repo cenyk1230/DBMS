@@ -19,7 +19,7 @@ private:
 	int mSlotNum;
 	int mRecordOffset;
 	BufPageManager *mBufPageManager;
-	std::vector<bool> mAvailablePage;
+	std::vector<int> mAvailablePage;
 
 private:
 	RID getNewRid();

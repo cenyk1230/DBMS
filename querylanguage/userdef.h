@@ -89,6 +89,7 @@ class Node{
   const static int VARCHAR = 1;
   const static int FLOAT = 2;
   const static int STRING = 3;
+  const static int NULLDATA = 4;
 
   const static int CREATE_DATABASE = 0;
   const static int USE_DATABASE = 1;
@@ -100,6 +101,9 @@ class Node{
   const static int SHOW_DATABASE_ALL = 7;
   const static int INSERT = 8;
   const static int DELETE = 9;
+  const static int UPDATE = 10;
+  const static int SELECT = 11;
+  const static int SELECT_ALL = 12;
 
   const static int OP_EQU = 0;
   const static int OP_NEQ = 1;
@@ -149,7 +153,7 @@ class ColumnNode: public Node{
   public:
   void print(){
     printf("COLUMN MAP: (name=>%s, type=>%s, length=>%d", str.c_str(), toString(datatype).c_str(), number);
-    if(flag & 1 != 0){
+    if((flag & 1) != 0){
       printf(", nullable=>FALSE");
     }
     printf(")\n");
@@ -249,7 +253,6 @@ class RowsNode: public Node{
     }
     printf("End of Row List\n");
   }
-  void visit();
   virtual ~RowsNode(){
     for(std::vector<Node *>::iterator i = subtree.begin(); i != subtree.end(); ++i){
       if(*i != NULL){
@@ -270,7 +273,6 @@ class RowNode: public Node{
     printf("\n");
   }
   
-  void visit();
   
   virtual ~RowNode(){
     for(std::vector<Node *>::iterator i = subtree.begin(); i != subtree.end(); ++i){

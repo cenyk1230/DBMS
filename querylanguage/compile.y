@@ -10,7 +10,7 @@ int yywrap();
 
 %}
 %token CREATE TABLE PRIMARY KEY IDENTIFIER DATABASE DROP SHOW USE 
-%token DATABASES SELECT INSERT INTO DELETE FROM WHERE VALUES
+%token DATABASES SELECT INSERT INTO UPDATE DELETE FROM WHERE VALUES SET
 %token NUMBER CONSTSTR 
 %token AND IS NOT NULLSIGN
 %token EQU NEQ LEQ GEQ LES GTR
@@ -87,6 +87,37 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->stmttype = Node::DELETE;
   $$->str = $3->str;
   $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
+} | UPDATE IDENTIFIER SET ColumnAccess EQU Value WhereClauseList
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::UPDATE;
+  $$->str = $2->str;
+  $$->flag = Node::setFlag($$->flag, 2, false);
+  $$->subtree.push_back($4);
+  $$->subtree.push_back($6);
+  $$->subtree.push_back($7);
+} | UPDATE IDENTIFIER SET ColumnAccess EQU ColumnAccess WhereClauseList
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::UPDATE;
+  $$->str = $2->str;
+  $$->flag = Node::setFlag($$->flag, 2, true);
+  $$->subtree.push_back($4);
+  $$->subtree.push_back($6);
+  $$->subtree.push_back($7);
+} | SELECT ColumnAccessList FROM IDENTIFIERLIST WhereClauseList
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::SELECT;
+  $$->subtree.push_back($2);
+  $$->subtree.push_back($4);
+  $$->subtree.push_back($5);
+} | SELECT FROM IDENTIFIERLIST WhereClauseList
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::SELECT_ALL;
+  $$->subtree.push_back($3);
+  $$->subtree.push_back($4);
 };
 
 Rows: '(' Row ')' ',' Rows
@@ -106,7 +137,19 @@ Row: Value
 {
   $$ = $3;
   $$->subtree.push_back($1);
-}
+} | /*nothing*/ ',' Row
+{
+  $$ = $2;
+  ValueNode *nullvalue = new ValueNode();
+  nullvalue->datatype = Node::NULLDATA;
+  $$->subtree.push_back(nullvalue);
+} | /*nothing*/
+{
+  $$ = new RowNode();
+  ValueNode *nullvalue = new ValueNode();
+  nullvalue->datatype = Node::NULLDATA;
+  $$->subtree.push_back(nullvalue);
+};
 
 Value: NUMBER
 {
@@ -118,7 +161,7 @@ Value: NUMBER
   $$ = new ValueNode();
   $$->str = $1->str;
   $$->datatype = Node::STRING;
-}
+};
 
 WhereClauseList: WhereClause
 {
@@ -128,7 +171,7 @@ WhereClauseList: WhereClause
 {
   $$ = $3;
   $$->subtree.push_back($1);
-}
+};
 
 WhereClause: ColumnAccess Op Value
 {
@@ -158,7 +201,28 @@ WhereClause: ColumnAccess Op Value
   $$->subtree.push_back($1);
   $$->flag = Node::setFlag($$->flag, 3, true);
   $$->flag = Node::setFlag($$->flag, 0, true);
-}
+};
+
+IDENTIFIERLIST: IDENTIFIER
+{
+  $$ = new Node();
+  $$->subtree.push_back($1);
+} | IDENTIFIER ',' IDENTIFIERLIST
+{
+  $$ = $3;
+  $$->subtree.push_back($1);
+};
+
+ColumnAccessList: ColumnAccess
+{
+  $$ = new Node();
+  $$->subtree.push_back($1);
+} | ColumnAccess ',' ColumnAccessList
+{
+  $$ = $3;
+  $$->subtree.push_back($1);
+};
+
 
 ColumnAccess: IDENTIFIER
 {
@@ -172,7 +236,7 @@ ColumnAccess: IDENTIFIER
   $$->primary = $1->str;
   $$->str = $3->str;
   $$->flag = Node::setFlag($$->flag, 1, true);
-}
+};
 
 ColumnList: Column ',' ColumnList // Use stack
 {
@@ -237,7 +301,9 @@ Op: EQU {
 } | GTR {
   $$ = new Node();
   $$->datatype = Node::OP_GTR;
-}
+};
+
+
 %%
 /*
 int main()

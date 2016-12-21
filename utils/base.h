@@ -1,13 +1,16 @@
 #ifndef __BASE_H__
 #define __BASE_H__
 
+#include <string>
+
 const int MAX_NAME_LEN = 20;
 const double EPS = 1e-6;
 
 enum AttrType {
 	INTEGER = 0,
-	FLOAT = 1,
-	STRING = 2
+	FLOAT,
+	STRING,
+	NOTYPE
 };
 
 enum CompOp {
@@ -29,7 +32,7 @@ struct AttrInfo {
 
 struct AttrInfoEx {
 	bool nullable;
-	const char *attrName;
+	std::string attrName;
 	int offset;
 	AttrType attrType;
 	int attrLength;
