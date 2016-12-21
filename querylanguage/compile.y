@@ -21,9 +21,9 @@ ALL: StmtList
 {
   $$ = $1;
   $$->print();
-  /*
+  
   $$->visit();
-  */
+  
 };
 
 StmtList: Stmt StmtList
@@ -78,19 +78,19 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
 } | INSERT INTO IDENTIFIER VALUES Rows ';'
 {
   $$ = new StmtNode();
-  $$->stmttype = Node::INSERT;
+  $$->stmttype = Node::INSERT_DATA;
   $$->str = $3->str;
   $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
 } | DELETE FROM IDENTIFIER WHERE WhereClauseList ';'
 {
   $$ = new StmtNode();
-  $$->stmttype = Node::DELETE;
+  $$->stmttype = Node::DELETE_DATA;
   $$->str = $3->str;
   $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
 } | UPDATE IDENTIFIER SET ColumnAccess EQU Value WhereClauseList
 {
   $$ = new StmtNode();
-  $$->stmttype = Node::UPDATE;
+  $$->stmttype = Node::UPDATE_DATA;
   $$->str = $2->str;
   $$->flag = Node::setFlag($$->flag, 2, false);
   $$->subtree.push_back($4);
@@ -99,7 +99,7 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
 } | UPDATE IDENTIFIER SET ColumnAccess EQU ColumnAccess WhereClauseList
 {
   $$ = new StmtNode();
-  $$->stmttype = Node::UPDATE;
+  $$->stmttype = Node::UPDATE_DATA;
   $$->str = $2->str;
   $$->flag = Node::setFlag($$->flag, 2, true);
   $$->subtree.push_back($4);
@@ -108,14 +108,14 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
 } | SELECT ColumnAccessList FROM IDENTIFIERLIST WhereClauseList
 {
   $$ = new StmtNode();
-  $$->stmttype = Node::SELECT;
+  $$->stmttype = Node::SELECT_DATA;
   $$->subtree.push_back($2);
   $$->subtree.push_back($4);
   $$->subtree.push_back($5);
 } | SELECT FROM IDENTIFIERLIST WhereClauseList
 {
   $$ = new StmtNode();
-  $$->stmttype = Node::SELECT_ALL;
+  $$->stmttype = Node::SELECT_DATA_ALL;
   $$->subtree.push_back($3);
   $$->subtree.push_back($4);
 };
