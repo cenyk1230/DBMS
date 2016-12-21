@@ -29,7 +29,7 @@ public:
                 const std::vector<const char *> &tables, 
                 const std::vector<Condition> &conditions);
     bool insert(const char *tableName, 
-                const std::vector<Value> &values);
+                const std::vector<std::vector<Value> > &values);
     bool remove(const char *tableName, 
                 const std::vector<Condition> &conditions);
     bool update(const char *tableName, 
