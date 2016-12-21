@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <iostream>
+#include <cassert>
 
 #include "BPlusTree.h"
 
@@ -63,6 +64,13 @@ void BPlusNode::setKey(int index, void *pData) {
     }
 }
 
+void BPlusNode::print() {
+    cout << "p = " << this << ", par = " << this->parent << ", num = " << num << ", isLeaf = " << isLeaf << endl;
+    for (int i = 0; i < num; ++i) {
+        cout << "  key " << i << " : " << *((int *)key[i]) << endl;
+    }
+}
+
 
 BPlusTree::BPlusTree(int branch, AttrType attrType, int attrLength) {
     mBranch = branch;
@@ -89,9 +97,12 @@ void BPlusTree::dfs(BPlusNode *node) {
 }
 
 bool BPlusTree::lessThan(void *pData, void *key) {
+    assert(pData != NULL);
+    assert(key != NULL);
     if (mAttrType == INTEGER) {
         int dataValue = *((int *)pData);
         int keyValue = *((int *)key);
+        //cout << dataValue << " " << keyValue << endl;
         return dataValue < keyValue; 
     } else if (mAttrType == FLOAT) {
         float dataValue = *((float *)pData);
@@ -111,6 +122,7 @@ bool BPlusTree::lessThan(void *pData, void *key) {
 }
 
 BPlusNode* BPlusTree::search(BPlusNode *node, void *pData) {
+    assert(node != NULL);
     if (node->isLeaf) {
         return node;
     }
@@ -147,12 +159,14 @@ void BPlusTree::insertInLeaf(BPlusNode *node, void *pData, const RID &rid) {
         newNode->setKey(i, node->key[i + half]);
         newNode->data[i] = node->data[i + half];
     }
+    //cout << *((int *)newNode->key[0]) << endl;
     for (int i = half; i < mBranch; ++i) {
         //node->key[i] = NULL;
         node->data[i] = RID();
     }
     newNode->right = node->right;
     node->right = newNode;
+    newNode->left = node;
     if (node->parent == NULL) {
         mRoot = new BPlusNode(mBranch, mAttrType, mAttrLength);
         mRoot->num = 1;
@@ -171,6 +185,7 @@ void BPlusTree::insertInInternal(BPlusNode *node, BPlusNode *sonNode, void *pDat
             //node->key[i] = pData;
             node->setKey(i, pData);
             node->son[i] = sonNode;
+            break;
         }
         //node->key[i] = node->key[i - 1];
         node->setKey(i, node->key[i - 1]);
@@ -188,6 +203,7 @@ void BPlusTree::insertInInternal(BPlusNode *node, BPlusNode *sonNode, void *pDat
         //newNode->key[i] = node->key[i + half];
         newNode->setKey(i, node->key[i + half]);
         newNode->son[i] = node->son[i + half];
+        node->son[i + half]->parent = newNode;
     }
     for (int i = half; i < mBranch; ++i) {
         //node->key[i] = NULL;
@@ -206,19 +222,24 @@ void BPlusTree::insertInInternal(BPlusNode *node, BPlusNode *sonNode, void *pDat
 }
 
 void BPlusTree::insertEntry(void *pData, const RID &rid) {
+    //cout << "enter B+Tree::insertEntry" << endl;
     BPlusNode *node = search(mRoot, pData);
     insertInLeaf(node, pData, rid);
+    //cout << "leave B+Tree::insertEntry" << endl;
 }
 
 void BPlusTree::deleteInInternal(BPlusNode *node, void *pData) {
-    int index = 0;
-    for (int i = 0; i < node->num; ++i) {
+    //cout << "deleteInInternal " << node << " " << node->num << " " << pData << endl;
+    int index = node->num - 1;
+    for (int i = 0; i < node->num - 1; ++i) {
         //if (node->key[i] == pData) {
-        if (!lessThan(node->key[i], pData) && !lessThan(pData, node->key[i])) {
+        //if (!lessThan(node->key[i], pData) && !lessThan(pData, node->key[i])) {
+        if (lessThan(pData, node->key[i + 1])) {
             index = i;
             break;
         }
     }
+    //cout << "index = " << index << endl;
     --node->num;
     for (int i = index; i < node->num; ++i) {
         //node->key[i] = node->key[i + 1];
@@ -238,7 +259,7 @@ void BPlusTree::deleteInInternal(BPlusNode *node, void *pData) {
 }
 
 bool BPlusTree::deleteInLeaf(BPlusNode *node, void *pData, const RID &rid) {
-    //cout << "deleteInLeaf " << pData << endl;
+    //cout << "deleteInLeaf " << node << " " << node->num << " " << pData << endl;
     int index = 0;
     for (int i = 0; i < node->num; ++i) {
         //cout << i << " " << node->key[i] << " " << pData << endl;
@@ -273,8 +294,12 @@ bool BPlusTree::deleteInLeaf(BPlusNode *node, void *pData, const RID &rid) {
 }
 
 bool BPlusTree::deleteEntry(void *pData, const RID &rid) {
+    //cout << "enter B+Tree::deleteEntry" << endl;
     BPlusNode *node = search(mRoot, pData);
-    return deleteInLeaf(node, pData, rid);
+    //cout << "after search node" << endl;
+    bool flag = deleteInLeaf(node, pData, rid);
+    //cout << "leave B+Tree::deleteEntry" << endl;
+    return flag;
 }
 
 BPlusNode* BPlusTree::getFirstDataNode() {
@@ -300,4 +325,14 @@ void BPlusTree::getAllEntry(vector<pair<void *, RID> > &entries) {
 
 BPlusNode* BPlusTree::getRoot() {
     return mRoot;
+}
+
+void BPlusTree::print(BPlusNode *node) {
+    node->print();
+    if (node->isLeaf) {
+        return;
+    }
+    for (int i = 0; i < node->num; ++i) {
+        print(node->son[i]);
+    }
 }

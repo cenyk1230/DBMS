@@ -42,20 +42,35 @@ int main() {
     int int1 = 124;
     float float1 = 2.5;
     char string1[10] = "abcde";
-    for (int i = 0; i < attrCount; ++i) {
-        Value v;
-        v.attrType = (AttrType)(i % 3);
-        if (i == 0) {
-            v.data = (char *)&int1;
-        } else if (i == 1) {
-            v.data = (char *)&float1;
-        } else {
-            v.data = string1;
+    // for (int i = 0; i < attrCount; ++i) {
+    //     Value v;
+    //     v.attrType = (AttrType)(i % 3);
+    //     if (i == 0) {
+    //         v.data = (char *)&int1;
+    //     } else if (i == 1) {
+    //         v.data = (char *)&float1;
+    //     } else {
+    //         v.data = string1;
+    //     }
+    //     values.push_back(v);
+    // }
+    for (int j = 0; j < 1000; ++j) {
+        int tmpInt = j;
+        values.clear();
+        for (int i = 0; i < attrCount; ++i) {
+            Value v;
+            v.attrType = (AttrType)(i % 3);
+            if (i == 0) {
+                v.data = (char *)&tmpInt;
+            } else if (i == 1) {
+                v.data = (char *)&float1;
+            } else {
+                v.data = string1;
+            }
+            values.push_back(v);
         }
-        values.push_back(v);
+        fprintf(stdout, "j = %d, insert flag = %d\n", j, ql->insert(tableName, values));
     }
-    fprintf(stdout, "insert flag = %d\n", ql->insert(tableName, values));
-
     vector<TableAttr> attrs;
     for (int i = 0; i < attrCount; ++i) {
         TableAttr attr;
@@ -67,12 +82,12 @@ int main() {
     vector<Condition> selectConds;
     fprintf(stdout, "select flag = %d\n", ql->select(attrs, tables, selectConds));
 
-    int int2 = 139;
+    float float2 = 3.9;
     Value updateValue;
-    updateValue.attrType = INTEGER;
-    updateValue.data = (char *)&int2;
+    updateValue.attrType = FLOAT;
+    updateValue.data = (char *)&float2;
     vector<Condition> updateConds;
-    fprintf(stdout, "update flag = %d\n", ql->update(tableName, attrs[0], updateValue, updateConds));
+    fprintf(stdout, "update flag = %d\n", ql->update(tableName, attrs[1], updateValue, updateConds));
     fprintf(stdout, "select flag = %d\n", ql->select(attrs, tables, selectConds));
 
     vector<Condition> removeConds;

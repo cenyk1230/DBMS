@@ -25,7 +25,7 @@ public:
     ~BPlusNode();
 
     void setKey(int index, void *pData);
-
+    void print();
 };
 
 class BPlusTree {
@@ -53,6 +53,7 @@ public:
     bool deleteEntry(void *pData, const RID &rid);
     void getAllEntry(std::vector<std::pair<void *, RID> > &entries);
     BPlusNode* getRoot();
+    void print(BPlusNode *node);
 };
 
 #endif // __B_PLUS_TREE_H__

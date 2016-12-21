@@ -118,6 +118,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
 bool QL_Manager::insert(const char *tableName, 
             const std::vector<Value> &values)
 {
+    //cout << "enter QL_Manager::insert" << endl;
     vector<AttrInfoEx> attrInfos;
     getAttrInfoEx(tableName, attrInfos);
 
@@ -158,13 +159,14 @@ bool QL_Manager::insert(const char *tableName,
         indexHandle->insertEntry(values[indexNo].data, rid);
         mIXManager->closeIndex(indexHandle);
     }
-
+    //cout << "leave QL_Manager::insert" << endl;
     return true;
 }
 
 bool QL_Manager::remove(const char *tableName, 
             const std::vector<Condition> &conditions)
 {
+    //cout << "enter QL_Manager::remove" << endl;
     string DBName = mSMManager->getDBName();
     string fullTableName = DBName + "/" + string(tableName);
 
@@ -225,6 +227,7 @@ bool QL_Manager::remove(const char *tableName,
     if (indexNo != -1) {
         mIXManager->closeIndex(indexHandle);
     }
+    //cout << "leave QL_Manager::remove" << endl;
     return true;
 }
 
