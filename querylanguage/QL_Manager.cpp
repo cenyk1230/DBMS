@@ -2,6 +2,8 @@
 
 #include "QL_Manager.h"
 
+using namespace std;
+
 extern const int MAX_NAME_LEN;
 extern const double EPS;
 
@@ -85,7 +87,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                 }
             }
             if (attrIndex[i] == -1) {
-                fprintf(stderr, "select: can't find selected attribute %s\n", attrs[i].attrName);
+                fprintf(stderr, "select failed: can't find selected attribute %s\n", attrs[i].attrName);
                 return false;
             }
         }
@@ -116,49 +118,71 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
 }
 
 bool QL_Manager::insert(const char *tableName, 
-            const std::vector<Value> &values)
+            const vector<vector<Value> > &allValues)
 {
     //cout << "enter QL_Manager::insert" << endl;
     vector<AttrInfoEx> attrInfos;
     getAttrInfoEx(tableName, attrInfos);
 
-    if (values.size() != attrInfos.size()) {
-        fprintf(stderr, "insert: wrong attributes size, expected %d\n", (int)attrInfos.size());
-        return false;
-    }
-    for (int i = 0; i < attrInfos.size(); ++i) {
-        if (attrInfos[i].attrType != values[i].attrType) {
-            fprintf(stderr, "insert: wrong attibutes type.\n");
-            return false;
-        }
-    }
-
-    int total = 0;
-    for (int i = 0; i < attrInfos.size(); ++i) {
-        total += attrInfos[i].attrLength;
-    }
-    char *tData = new char[total];
-    for (int i = 0; i < attrInfos.size(); ++i) {
-        memcpy(tData + attrInfos[i].offset, values[i].data, attrInfos[i].attrLength);
-    }
-
     RM_FileHandle *fileHandle;
     string DBName = mSMManager->getDBName();
     string fullTableName = DBName + "/" + string(tableName);
     mRMManager->openFile(fullTableName.c_str(), fileHandle);
-    RID rid;
-    fileHandle->insertRec(tData, rid);
-    mRMManager->closeFile(fileHandle);
-    delete []tData;
 
     int indexNo = getIndexNo(tableName);
-
+    IX_IndexHandle *indexHandle;
     if (indexNo != -1) {
-        IX_IndexHandle *indexHandle;
         mIXManager->openIndex(fullTableName.c_str(), indexNo, indexHandle);
-        indexHandle->insertEntry(values[indexNo].data, rid);
+    }
+
+    int valueNum = allValues.size();
+    for (int valueIndex = 0; valueIndex < valueNum; ++valueIndex) {
+        const vector<Value> &values = allValues[valueIndex];
+        if (values.size() != attrInfos.size()) {
+            fprintf(stderr, "insert failed: wrong attributes size %d, expected %d\n", (int)values.size(), (int)attrInfos.size());
+            continue;
+        }
+        bool typeFlag = false;
+        bool nullFlag = false;
+        for (int i = 0; i < attrInfos.size(); ++i) {
+            if (values[i].attrType != NOTYPE && attrInfos[i].attrType != values[i].attrType) {
+                fprintf(stderr, "insert failed: wrong attibute type of %s.\n", attrInfos[i].attrName.c_str());
+                typeFlag = true;
+                break;
+            }
+            if (values[i].attrType == NOTYPE && !attrInfos[i].nullable) {
+                fprintf(stderr, "insert failed: attribute %s can't be NULL.\n", attrInfos[i].attrName.c_str());
+                nullFlag = true;
+                break;
+            }
+        }
+        if (typeFlag || nullFlag) {
+            continue;
+        }
+
+        int total = 0;
+        for (int i = 0; i < attrInfos.size(); ++i) {
+            total += attrInfos[i].attrLength;
+        }
+        char *tData = new char[total];
+        for (int i = 0; i < attrInfos.size(); ++i) {
+            memcpy(tData + attrInfos[i].offset, values[i].data, attrInfos[i].attrLength);
+        }
+
+        RID rid;
+        fileHandle->insertRec(tData, rid);
+        delete []tData;
+
+        if (indexNo != -1) {
+            indexHandle->insertEntry(values[indexNo].data, rid);
+        }
+    } 
+
+    mRMManager->closeFile(fileHandle);
+    if (indexNo != -1) {
         mIXManager->closeIndex(indexHandle);
     }
+
     //cout << "leave QL_Manager::insert" << endl;
     return true;
 }
@@ -196,7 +220,7 @@ bool QL_Manager::remove(const char *tableName,
             }
         }
         if (conditionIndex.size() != i + 1) {
-            fprintf(stderr, "delete: can't find the attribute %s\n", conditions[i].lAttr.attrName);
+            fprintf(stderr, "delete failed: can't find the attribute %s\n", conditions[i].lAttr.attrName);
             return false;
         }
     }
@@ -263,7 +287,7 @@ bool QL_Manager::update(const char *tableName,
             }
         }
         if (conditionIndex.size() != i + 1) {
-            fprintf(stderr, "update: can't find the attribute %s\n", conditions[i].lAttr.attrName);
+            fprintf(stderr, "update failed: can't find the attribute %s\n", conditions[i].lAttr.attrName);
             return false;
         }
     }
@@ -276,7 +300,7 @@ bool QL_Manager::update(const char *tableName,
         }
     }
     if (updateIndex == -1) {
-        fprintf(stderr, "update: can't find the updated attribute %s\n", attr.attrName);
+        fprintf(stderr, "update failed: can't find the updated attribute %s\n", attr.attrName);
         return false;
     }
     int pageNum = fileHandle->getPageNum();

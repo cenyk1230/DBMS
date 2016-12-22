@@ -38,6 +38,7 @@ int main() {
     }
     sm->createTable(tableName, "id", attributes);
 
+    vector<vector<Value> > allValues;
     vector<Value> values;
     int int1 = 124;
     float float1 = 2.5;
@@ -54,14 +55,15 @@ int main() {
     //     }
     //     values.push_back(v);
     // }
-    for (int j = 0; j < 1000; ++j) {
-        int tmpInt = j;
+    int tmpInt[10000];
+    for (int j = 0; j < 10000; ++j) {
+        tmpInt[j] = j;
         values.clear();
         for (int i = 0; i < attrCount; ++i) {
             Value v;
             v.attrType = (AttrType)(i % 3);
             if (i == 0) {
-                v.data = (char *)&tmpInt;
+                v.data = (char *)&tmpInt[j];
             } else if (i == 1) {
                 v.data = (char *)&float1;
             } else {
@@ -69,8 +71,10 @@ int main() {
             }
             values.push_back(v);
         }
-        fprintf(stdout, "j = %d, insert flag = %d\n", j, ql->insert(tableName, values));
+        allValues.push_back(values);
+        //fprintf(stdout, "j = %d, insert flag = %d\n", j, ql->insert(tableName, values));
     }
+    ql->insert(tableName, allValues);
     vector<TableAttr> attrs;
     for (int i = 0; i < attrCount; ++i) {
         TableAttr attr;

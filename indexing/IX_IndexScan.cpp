@@ -111,6 +111,7 @@ bool IX_IndexScan::satisfy(int indexNum){
         default:
             break;
     }
+    return false;
 }
 
 bool IX_IndexScan::openScan(IX_IndexHandle *indexHandle, CompOp compOp, void *value) {

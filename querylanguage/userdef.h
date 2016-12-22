@@ -84,7 +84,6 @@ class Node{
   char flag;
 
 
-
   const static int INTEGER = 0;
   const static int VARCHAR = 1;
   const static int FLOAT = 2;
@@ -99,11 +98,11 @@ class Node{
   const static int DROP_TABLE = 5;
   const static int SHOW_TABLE = 6;
   const static int SHOW_DATABASE_ALL = 7;
-  const static int INSERT = 8;
-  const static int DELETE = 9;
-  const static int UPDATE = 10;
-  const static int SELECT = 11;
-  const static int SELECT_ALL = 12;
+  const static int INSERT_DATA = 8;
+  const static int DELETE_DATA = 9;
+  const static int UPDATE_DATA = 10;
+  const static int SELECT_DATA = 11;
+  const static int SELECT_DATA_ALL = 12;
 
   const static int OP_EQU = 0;
   const static int OP_NEQ = 1;
@@ -349,7 +348,7 @@ class StmtNode: public Node{
         printf("SHOW TABLE %s\n", str.c_str());
         break;
         
-      case INSERT:
+      case INSERT_DATA:
         printf("Insert into table \"%s\"\nRecords shown as follow:\n", str.c_str());
         printf("BEGIN\n");
         for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
@@ -357,7 +356,7 @@ class StmtNode: public Node{
         }
         printf("END\n");
         break;
-      case DELETE:
+      case DELETE_DATA:
         printf("Delete from table \"%s\"\n", str.c_str());
         printf("Where ");
         for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
