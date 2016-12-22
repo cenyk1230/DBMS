@@ -256,6 +256,13 @@ void StmtNode::visit(){
         }
       }
       break;
+    case UPDATE:
+      if(getFlag(flag, 2)){
+        // ColumnAccess
+      }
+      break;
+    case SELECT:
+      break;
     default:
       break;
   }
