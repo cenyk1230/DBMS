@@ -92,16 +92,6 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$ = new StmtNode();
   $$->stmttype = Node::UPDATE_DATA;
   $$->str = $2->str;
-  $$->flag = Node::setFlag($$->flag, 2, false);
-  $$->subtree.push_back($4);
-  $$->subtree.push_back($6);
-  $$->subtree.push_back($7);
-} | UPDATE IDENTIFIER SET ColumnAccess EQU ColumnAccess WhereClauseList
-{
-  $$ = new StmtNode();
-  $$->stmttype = Node::UPDATE_DATA;
-  $$->str = $2->str;
-  $$->flag = Node::setFlag($$->flag, 2, true);
   $$->subtree.push_back($4);
   $$->subtree.push_back($6);
   $$->subtree.push_back($7);

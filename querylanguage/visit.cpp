@@ -38,6 +38,108 @@ CompOp opAdapt(int type){
   }
 }
 
+TableAttr getColumn(Node *x){
+  TableAttr res;
+  res.attrName = (x->str).c_str();
+  res.tableName = getFlag(x->flag, 1) ? (x->primary).c_str() : NULL; 
+  return res;
+}
+Condition getCondition(Node *x){
+  Condition res;
+  for(std::vector<Node *>::reverse_iterator i = x->subtree.rbegin(); i != x->subtree.rend(); ++i){
+    if(getFlag(x->flag, 3)){
+      // Null judgement
+      if(getFlag(x->flag, 0)){
+        // NOT NULL
+        res.rIsValue = true;
+        res.op = CompOp::NE_OP;  //differ
+        res.rValue.attrType = AttrType::NOTYPE;
+        res.rValue.data = NULL;
+        res.lAttr = getColumn((*i)->subtree[0]);
+      }
+      else{
+        // IS NULL
+        res.rIsValue = true;
+        res.op = CompOp::EQ_OP;  //differ
+        res.rValue.attrType = AttrType::NOTYPE;
+        res.rValue.data = NULL;
+        res.lAttr = getColumn((*i)->subtree[0]);
+      }
+    }
+    else{
+      if(getFlag(flag, 2)){
+        // Column
+        res.rIsValue = false;
+        res.lAttr = getColumn((*i)->subtree[0]);
+        res.rAttr = getColumn((*i)->subtree[1]);
+        res.op = opAdapt((*i)->datatype);
+      }
+      else{
+        // Value
+        res.rIsValue = true;
+        res.op = opAdapt((*i)->datatype);
+        res.lAttr = getColumn((*i)->subtree[0]);
+        res.rValue = getValue((*i)->subtree[1]);
+      }
+    }
+  }
+}
+
+Value getValue(Node *x){
+  Value res;
+  res.attrType = adapt(x->datatype);
+  int *intp;
+  char *charp;
+  switch(x->datatype){
+    case Node::INTEGER:
+      intp = new int;
+      *intp = x->number;
+      res.data = (void *)intp;
+      intp = NULL;
+      break;
+    case Node::VARCHAR:
+    case Node::STRING:
+      x->str += "\0";
+      charp = new char[x->str.size()];
+      memcpy(charp, x->str.c_str(), x->str.size());
+      res.data = (void *)charp;
+      charp = NULL;
+      break;
+    case Node::NULLDATA:
+      res.data = NULL;
+      break;
+    default:
+      res.data = NULL;
+      break;
+  }
+  return res;
+}
+
+void releaseValue(Value &v){
+  int *intp;
+  char *charp;
+  switch(v.attrType){
+    case AttrType::INTEGER:
+      intp = (int *)v.data;
+      delete intp;
+      intp = NULL;
+      break;
+    case AttrType::STRING:
+      charp = (char *)v.data;
+      delete[] charp;
+      charp = NULL;
+      break;
+    default:
+      break;
+  }
+}
+
+void releaseCondition(Condition &c){
+  if(c.rIsValue){
+    releaseValue(c.rValue);
+  }
+}
+
 void StmtNode::visit(){
   std::vector<Column> clist; 
   Column t;
@@ -47,6 +149,9 @@ void StmtNode::visit(){
   std::vector<Condition> wlist;
   Condition wt;
   TableAttr tt;
+  std::vector<TableAttr> tlist;
+  std::vector<const char *> slist;
+  Node *ptr;
   int *intp;
   char *charp;
   switch(stmttype){
@@ -87,181 +192,82 @@ void StmtNode::visit(){
     case SHOW_DATABASE_ALL:
       //TODO: add interface
       break;
-    case INSERT:
+    case INSERT_DATA:
       for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
         vlist.clear();
         for(std::vector<Node *>::reverse_iterator j = (*i)->subtree.rbegin(); j != (*i)->subtree.rend(); ++j){
-          vt.attrType = adapt((*j)->datatype);
-          switch((*j)->datatype){
-            case Node::INTEGER:
-              intp = new int;
-              *intp = (*j)->number;
-              vt.data = (void *)intp;
-              intp = NULL;
-              break;
-            case Node::VARCHAR:
-            case Node::STRING:
-              (*j)->str += "\0";  // Add NULL
-              
-              charp = new char[((*j)->str).size()];
-              vt.data = (void *)charp;
-              memcpy(charp, ((*j)->str).c_str(), ((*j)->str).size());
-              charp = NULL;
-              break;
-            case Node::NULLDATA:
-              vt.data = NULL;
-            default:
-              break;
-          }
+          vt = getValue(*j);
           vlist.push_back(vt);
         }
         qm->insert(str.c_str(), vlist);
         for(std::vector<Value>::iterator j = vlist.begin(); j != vlist.end(); ++j){
-          switch((*j).attrType){
-            case AttrType::INTEGER:
-              intp = (int *)(*j).data;
-              delete intp;
-              intp = NULL;
-              break;
-            case AttrType::STRING:
-              charp = (char *)(*j).data;
-              delete[] charp;
-              charp = NULL;
-              break;
-            default:
-              /*
-                Do nothing if Value is NULL
-              */
-              break;
-          }
+          releaseValue(*j);
         }
       }
       vlist.clear();
       break;
-    case DELETE:
+    case DELETE_DATA:
       wlist.clear();
       for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
-        if(getFlag(flag, 3)){
-          // Null judgement
-          if(getFlag(flag, 0)){
-            // NOT NULL
-            wt.rIsValue = true;
-            wt.op = CompOp::NE_OP;  //differ
-            wt.rValue.attrType = AttrType::NOTYPE;
-            wt.rValue.data = NULL;
-            if(getFlag((*i)->subtree[0]->flag, 1)){
-              tt.tableName = (*i)->subtree[0]->primary.c_str();
-            }
-            else{
-              tt.tableName = NULL;
-            }
-            tt.attrName = (*i)->subtree[0]->str.c_str();
-            wt.lAttr = tt;
-          }
-          else{
-            // IS NULL
-            wt.rIsValue = true;
-            wt.op = CompOp::EQ_OP;  //differ
-            wt.rValue.attrType = AttrType::NOTYPE;
-            wt.rValue.data = NULL;
-            if(getFlag((*i)->subtree[0]->flag, 1)){
-              tt.tableName = (*i)->subtree[0]->primary.c_str();
-            }
-            else{
-              tt.tableName = NULL;
-            }
-            tt.attrName = (*i)->subtree[0]->str.c_str();
-            wt.lAttr = tt;
-          }
-        }
-        else{
-          if(getFlag(flag, 2)){
-            // Column
-            wt.rIsValue = false;
-            if(getFlag((*i)->subtree[0]->flag, 1)){
-              tt.tableName = (*i)->subtree[0]->primary.c_str();
-            }
-            else{
-              tt.tableName = NULL;
-            }
-            tt.attrName = (*i)->subtree[0]->str.c_str();
-            wt.lAttr = tt;
-            if(getFlag((*i)->subtree[1]->flag, 1)){
-              tt.tableName = (*i)->subtree[1]->primary.c_str();
-            }
-            else{
-              tt.tableName = NULL;
-            }
-            tt.attrName = (*i)->subtree[1]->str.c_str();
-            wt.rAttr = tt;
-            wt.op = opAdapt((*i)->datatype);
-          }
-          else{
-            // Value
-            wt.rIsValue = true;
-            wt.op = opAdapt((*i)->datatype);
-            if(getFlag((*i)->subtree[0]->flag, 1)){
-              tt.tableName = (*i)->subtree[0]->primary.c_str();
-            }
-            else{
-              tt.tableName = NULL;
-            }
-            tt.attrName = (*i)->subtree[0]->str.c_str();
-            wt.lAttr = tt;
-            // TODO: value assignment
-            vt.attrType = adapt((*i)->subtree[1]->datatype);
-            switch((*i)->subtree[1]->datatype){
-              case Node::INTEGER:
-                intp = new int;
-                *intp = (*i)->subtree[1]->number;
-                vt.data = (void *) intp;
-                intp = NULL;
-                break;
-              case Node::VARCHAR:
-              case Node::STRING:
-                (*i)->subtree[1]->str += "\0";  // Add NULL
-                charp = new char[((*i)->subtree[1]->str).size()];
-                memcpy(charp, ((*i)->subtree[1]->str).c_str(), ((*i)->subtree[1]->str).size());
-                vt.data = (void *) charp;
-                charp = NULL;
-                break;
-              default:
-                /*
-                Value cannot be NULL in a delete statement
-                */
-                break;
-            }
-            wt.rValue = vt;
-          }
-        }
+        wt = getCondition(*i);
         wlist.push_back(wt);
       }
       qm->remove(str.c_str(), wlist);
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
-        if((*i).rIsValue){
-          switch(((*i).rValue).attrType){
-            case AttrType::INTEGER:
-              intp = (int *)((*i).rValue).data;
-              delete intp;
-              intp = NULL;
-              break;
-            case AttrType::STRING:
-              charp = (char *)((*i).rValue).data;
-              delete []charp;
-              charp = NULL;
-              break;
-            default:
-              break;
-          }
-        }
+        releaseCondition(*i);
       }
       break;
-    case UPDATE:
-      if(getFlag(flag, 2)){
-        // ColumnAccess
+    case UPDATE_DATA:
+      tt = getColumn(subtree[0]);
+      vt = getValue(subtree[1]);
+      wlist.clear();
+      ptr = subtree[2];
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        wt = getCondition(*i);
+        wlist.push_back(wt);
+      }
+      update(str.c_str(), tt, vt, wlist);
+      for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
+        releaseCondition(*i);
       }
       break;
-    case SELECT:
+    case SELECT_DATA:
+      ptr = subtree[0];
+      tlist.clear();
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        tt = getColumn(*i);
+        tlist.push_back(tt);
+      }
+      ptr = subtree[1];
+      slist.clear();
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        slist.push_back(((*i)->str).c_str());
+      }
+      ptr = subtree[2];
+      wlist.clear();
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        wt = getCondition(*i);
+        wlist.push_back(wt);
+      }
+      select(tlist, slist, wlist);
+      for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
+        releaseCondition(*i);
+      }
+      break;
+    case SELECT_DATA_ALL:
+      ptr = subtree[0];
+      tlist.clear();
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        tt = getColumn(*i);
+        tlist.push_back(tt);
+      }
+      ptr = subtree[1];
+      slist.clear();
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        slist.push_back(((*i)->str).c_str());
+      }
+      wlist.clear();
+      select(tlist, slist, wlist);
       break;
     default:
       break;
