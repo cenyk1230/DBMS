@@ -87,7 +87,7 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->stmttype = Node::DELETE_DATA;
   $$->str = $3->str;
   $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
-} | UPDATE IDENTIFIER SET ColumnAccess EQU Value WhereClauseList
+} | UPDATE IDENTIFIER SET ColumnAccess EQU Value WHERE WhereClauseList ';'
 {
   $$ = new StmtNode();
   $$->stmttype = Node::UPDATE_DATA;
@@ -95,14 +95,14 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->subtree.push_back($4);
   $$->subtree.push_back($6);
   $$->subtree.push_back($7);
-} | SELECT ColumnAccessList FROM IDENTIFIERLIST WhereClauseList
+} | SELECT ColumnAccessList FROM IDENTIFIERLIST WHERE WhereClauseList ';'
 {
   $$ = new StmtNode();
   $$->stmttype = Node::SELECT_DATA;
   $$->subtree.push_back($2);
   $$->subtree.push_back($4);
   $$->subtree.push_back($5);
-} | SELECT FROM IDENTIFIERLIST WhereClauseList
+} | SELECT FROM IDENTIFIERLIST WHERE WhereClauseList ';'
 {
   $$ = new StmtNode();
   $$->stmttype = Node::SELECT_DATA_ALL;
