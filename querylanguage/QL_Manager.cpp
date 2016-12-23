@@ -26,7 +26,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
     vector<AttrInfoEx> attrInfos;
 
     int conditionNum = conditions.size();
-    fprintf(stdout, "condition num = %d\n", conditions.size());
+    fprintf(stdout, "condition num = %d\n", (int)conditions.size());
     vector<int> conditionIndex;
 
     vector<shared_ptr<RM_Record> > *selected = new vector<shared_ptr<RM_Record> >[tables.size()];
@@ -62,7 +62,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
             for (int j = 0; j < num; ++j) {
                 bool flag = true;
                 for (int k = 0; k < conditionNum; ++k) {
-                    if (conditionIndex[k] != -1 && !satisfyCondition(records[i], conditions[k], attrInfos[conditionIndex[k]])) {
+                    if (conditionIndex[k] != -1 && !satisfyCondition(records[j], conditions[k], attrInfos[conditionIndex[k]])) {
                         flag = false;
                         break;
                     }
@@ -169,6 +169,9 @@ bool QL_Manager::insert(const char *tableName,
             if (attrInfos[i].attrType == INTEGER) {
                 fprintf(stdout, "i = %d, value = %d\n", i, *(int *)values[i].data);
             }
+            if (attrInfos[i].attrType == STRING) {
+                fprintf(stdout, "i = %d, value = %s\n", i, (char *)values[i].data);
+            }
         }
         char *tData = new char[total];
         for (int i = 0; i < attrInfos.size(); ++i) {
@@ -239,7 +242,7 @@ bool QL_Manager::remove(const char *tableName,
         for (int j = 0; j < num; ++j) {
             bool flag = true;
             for (int k = 0; k < conditionNum; ++k) {
-                if (!satisfyCondition(records[i], conditions[k], attrInfos[conditionIndex[k]])) {
+                if (!satisfyCondition(records[j], conditions[k], attrInfos[conditionIndex[k]])) {
                     flag = false;
                     break;
                 }
@@ -381,16 +384,21 @@ bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
             }
         } else if (info.attrType == STRING) {
             char *stringValue = (char *)condition.rValue.data;
-            int cmpResult = 0;
-            for (int i = 0; i < info.attrLength; ++i) {
-                if (data[i] < stringValue[i]) {
-                    cmpResult = -1;
-                    break;
-                } else if (data[i] > stringValue[i]) {
-                    cmpResult = 1;
-                    break;
-                }
-            }
+            fprintf(stdout, "%s\n%s\n", data, stringValue);
+            int cmpResult = strncmp(data, stringValue, info.attrLength);
+            // for (int i = 0; i < info.attrLength; ++i) {
+            //     if (data[i] == 0 && stringValue[i] == 0) {
+            //         cmpResult = 0;
+            //         break;
+            //     }
+            //     if (data[i] < stringValue[i]) {
+            //         cmpResult = -1;
+            //         break;
+            //     } else if (data[i] > stringValue[i]) {
+            //         cmpResult = 1;
+            //         break;
+            //     }
+            // }
             switch (condition.op) {
                 case EQ_OP: return cmpResult == 0;
                 case LT_OP: return cmpResult == -1;

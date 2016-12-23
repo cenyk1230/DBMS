@@ -50,16 +50,16 @@ bool RM_FileScan::satisfyCondition(shared_ptr<RM_Record> ptrRec,
         }
     } else if (attrType == STRING) {
         char *stringValue = (char *)value;
-        int cmpResult = 0;
-        for (int i = 0; i < attrLength; ++i) {
-            if (data[i] < stringValue[i]) {
-                cmpResult = -1;
-                break;
-            } else if (data[i] > stringValue[i]) {
-                cmpResult = 1;
-                break;
-            }
-        }
+        int cmpResult = strncmp(data, stringValue, attrLength);
+        // for (int i = 0; i < attrLength; ++i) {
+        //     if (data[i] < stringValue[i]) {
+        //         cmpResult = -1;
+        //         break;
+        //     } else if (data[i] > stringValue[i]) {
+        //         cmpResult = 1;
+        //         break;
+        //     }
+        // }
         switch (compOp) {
             case EQ_OP: return cmpResult == 0;
             case LT_OP: return cmpResult == -1;
