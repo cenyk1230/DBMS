@@ -658,6 +658,31 @@ bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
         } else if (info.attrType == STRING) {
             char *stringValue = (char *)condition.rValue.data;
             //fprintf(stdout, "%s\n%s\n", data, stringValue);
+            if (condition.op == LK_OP) {
+                int len = strlen(stringValue);
+                int index = -1;
+                for (int i = 0; i < len; ++i) {
+                    if (stringValue[i] == '%') {
+                        index = i;
+                        break;
+                    }
+                }
+                string v = string(stringValue);
+                if (index != -1) {
+                    int dataLen = strlen(data);
+                    if (len > dataLen) {
+                        return false;
+                    }
+                    v.erase(index);
+                    v.insert(index, string(data), index, dataLen - len + 1);
+                }
+                for (int i = 0; i < v.length(); ++i) {
+                    if (v[i] == '_') {
+                        v.replace(i, 1, string(data), i, 1);
+                    }
+                }
+                return strncmp(data, v.c_str(), info.attrLength);
+            }
             int cmpResult = strncmp(data, stringValue, info.attrLength);
             // for (int i = 0; i < info.attrLength; ++i) {
             //     if (data[i] == 0 && stringValue[i] == 0) {

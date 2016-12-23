@@ -20,7 +20,8 @@ enum CompOp {
 	LE_OP,
 	GE_OP,
 	NE_OP,
-	NO_OP
+	NO_OP,
+	LK_OP
 };
 
 struct AttrInfo {
