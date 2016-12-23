@@ -251,6 +251,7 @@ void StmtNode::visit(){
       wlist.clear();
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         wt = getCondition(*i);
+        wlist.push_back(wt);
       }
       qm->select(tlist, slist, wlist);
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
