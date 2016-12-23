@@ -228,6 +228,17 @@ void BPlusTree::insertEntry(void *pData, const RID &rid) {
     //cout << "leave B+Tree::insertEntry" << endl;
 }
 
+bool BPlusTree::findEntry(void *pData) {
+    BPlusNode *node = search(mRoot, pData);
+    for (int i = 0; i < node->num; ++i) {
+        //fprintf(stdout, "%d %d\n", *(int *)node->key[i], *(int *)pData);
+        if (!lessThan(node->key[i], pData) && !lessThan(pData, node->key[i])) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void BPlusTree::deleteInInternal(BPlusNode *node, void *pData) {
     //cout << "deleteInInternal " << node << " " << node->num << " " << pData << endl;
     int index = node->num - 1;

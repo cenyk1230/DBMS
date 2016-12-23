@@ -36,6 +36,7 @@ public:
 
     void insertEntry(void *pData, const RID &rid);
     bool deleteEntry(void *pData, const RID &rid);
+    bool findEntry(void *pData);
     bool forcePages();
 
     int getFileID() const;

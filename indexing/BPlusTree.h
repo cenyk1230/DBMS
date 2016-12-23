@@ -51,6 +51,7 @@ public:
 
     void insertEntry(void *pData, const RID &rid);
     bool deleteEntry(void *pData, const RID &rid);
+    bool findEntry(void *pData);
     void getAllEntry(std::vector<std::pair<void *, RID> > &entries);
     BPlusNode* getRoot();
     void print(BPlusNode *node);

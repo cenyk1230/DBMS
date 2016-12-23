@@ -42,6 +42,10 @@ bool IX_IndexHandle::deleteEntry(void *pData, const RID &rid) {
     return mBPlusTree->deleteEntry(pData, rid);
 }
 
+bool IX_IndexHandle::findEntry(void *pData) {
+    return mBPlusTree->findEntry(pData);
+}
+
 bool IX_IndexHandle::forcePages() {
     //printBPlusTree();
     storeBPlusTree();

@@ -135,6 +135,8 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
         }
         fprintf(stdout, "\n");
         delete[] attrIndex;
+    } else {
+
     }
     delete[] selected;
     return true;
@@ -212,6 +214,16 @@ bool QL_Manager::insert(const char *tableName,
             //     fprintf(stdout, "i = %d, value = %s\n", i, (char *)values[i].data);
             // }
         }
+
+        if (indexNo != -1) {
+            bool dupFlag = indexHandle->findEntry(values[indexNo].data);
+            //fprintf(stdout, "dupFlag = %d\n", dupFlag);
+            if (dupFlag) {
+                fprintf(stdout, "insert error: primary key %d has alreday existed\n", *(int *)values[indexNo].data);
+                continue;
+            }
+        }
+
         char *tData = new char[total];
         for (int i = 0; i < attrInfos.size(); ++i) {
             if (values[i].data != NULL) {
