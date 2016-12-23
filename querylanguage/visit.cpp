@@ -205,17 +205,11 @@ void StmtNode::visit(){
         vvlist.push_back(vlist);
       }
       qm->insert(str.c_str(), vvlist);
-      for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
-        vlist.clear();
-        for(std::vector<Node *>::reverse_iterator j = (*i)->subtree.rbegin(); j != (*i)->subtree.rend(); ++j){
-          vt = getValue(*j);
-          vlist.push_back(vt);
-        }
-        for(std::vector<Value>::iterator j = vlist.begin(); j != vlist.end(); ++j){
+      for(std::vector<std::vector<Value> >::iterator i = vvlist.begin(); i != vvlist.end(); ++i){
+        for(std::vector<Value>::iterator j = (*i).begin(); j != (*i).end(); ++j){
           releaseValue(*j);
         }
       }
-      vlist.clear();
       break;
     case DELETE_DATA:
       wlist.clear();
