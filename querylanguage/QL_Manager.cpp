@@ -109,11 +109,26 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                 AttrType attrType = attrInfos[attrIndex[j]].attrType;
                 int offset = attrInfos[attrIndex[j]].offset;
                 if (attrType == INTEGER) {
-                    fprintf(stdout, "%-25d ", *(int *)(ptr->getData() + offset));
+                    int tmp = *(int *)(ptr->getData() + offset);
+                    if (tmp != -1)
+                        fprintf(stdout, "%-25d ", tmp);
+                    else
+                        fprintf(stdout, "%-25s ", "null");
                 } else if (attrType == FLOAT) {
                     fprintf(stdout, "%-25.6f ", *(float *)(ptr->getData() + offset));
                 } else if (attrType == STRING) {
-                    fprintf(stdout, "%-25s ", (char *)(ptr->getData() + offset));
+                    char *tmp = (char *)(ptr->getData() + offset);
+                    bool isNull = true;
+                    for (int k = 0; k < attrInfos[attrIndex[j]].attrLength - 1; ++k) {
+                        if (tmp[k] != -1) {
+                            isNull = false;
+                            break;
+                        }
+                    }
+                    if (!isNull)
+                        fprintf(stdout, "%-25s ", tmp);
+                    else 
+                        fprintf(stdout, "%-25s ", "null");
                 }
             }
             fprintf(stdout, "\n");
@@ -154,14 +169,14 @@ bool QL_Manager::insert(const char *tableName,
                 if (values[i].data != NULL) {
                     fprintf(stdout, "i = %d, value = %d\n", i, *(int *)values[i].data);
                 } else {
-                    fprintf(stdout, "i = %d, value = null\n");
+                    fprintf(stdout, "i = %d, value = null\n", i);
                 }
             }
             if (attrInfos[i].attrType == STRING) {
                 if (values[i].data != NULL) {
                     fprintf(stdout, "i = %d, value = %s\n", i, (char *)values[i].data);
                 } else {
-                    fprintf(stdout, "i = %d, value = null\n");
+                    fprintf(stdout, "i = %d, value = null\n", i);
                 }
             }
         }
@@ -201,6 +216,10 @@ bool QL_Manager::insert(const char *tableName,
         for (int i = 0; i < attrInfos.size(); ++i) {
             if (values[i].data != NULL) {
                 memcpy(tData + attrInfos[i].offset, values[i].data, attrInfos[i].attrLength);
+            } else {
+                memset(tData + attrInfos[i].offset, 0xFF, attrInfos[i].attrLength);
+                if (attrInfos[i].attrType == STRING)
+                    tData[attrInfos[i].offset + attrInfos[i].attrLength - 1] = '\0';
             }
         }
 
