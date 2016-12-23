@@ -55,8 +55,8 @@ int main() {
     //     }
     //     values.push_back(v);
     // }
-    int tmpInt[10000];
-    for (int j = 0; j < 10000; ++j) {
+    int tmpInt[100000];
+    for (int j = 0; j < 100000; ++j) {
         tmpInt[j] = j;
         values.clear();
         for (int i = 0; i < attrCount; ++i) {

@@ -146,6 +146,7 @@ void StmtNode::visit(){
   Column t;
   AttrType t_type;
   std::vector<Value> vlist;
+  std::vector<std::vector<Value> > vvlist;
   Value vt;
   std::vector<Condition> wlist;
   Condition wt;
@@ -194,13 +195,22 @@ void StmtNode::visit(){
       //TODO: add interface
       break;
     case INSERT_DATA:
+      vvlist.clear();
       for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
         vlist.clear();
         for(std::vector<Node *>::reverse_iterator j = (*i)->subtree.rbegin(); j != (*i)->subtree.rend(); ++j){
           vt = getValue(*j);
           vlist.push_back(vt);
         }
-        qm->insert(str.c_str(), vlist);
+        vvlist.push_back(vlist);
+      }
+      qm->insert(str.c_str(), vvlist);
+      for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
+        vlist.clear();
+        for(std::vector<Node *>::reverse_iterator j = (*i)->subtree.rbegin(); j != (*i)->subtree.rend(); ++j){
+          vt = getValue(*j);
+          vlist.push_back(vt);
+        }
         for(std::vector<Value>::iterator j = vlist.begin(); j != vlist.end(); ++j){
           releaseValue(*j);
         }
