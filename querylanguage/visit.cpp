@@ -241,24 +241,17 @@ void StmtNode::visit(){
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         tt = getColumn(*i);
         tlist.push_back(tt);
-        printf("vector size: %d\n", tlist.size());
       }
       ptr = subtree[1];
       slist.clear();
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         slist.push_back(((*i)->str).c_str());
-        printf("vector size: %d\n", slist.size());
-      }
       ptr = subtree[2];
       wlist.clear();
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         wt = getCondition(*i);
-        wlist.push_back(wt);
-        printf("vector size: %d\n", wlist.size());
       }
-      printf("***Before calling select()***\n");
       qm->select(tlist, slist, wlist);
-      printf("***After calling select()***\n");
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
         releaseCondition(*i);
       }
