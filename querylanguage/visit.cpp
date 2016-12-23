@@ -41,15 +41,18 @@ CompOp opAdapt(int type){
 TableAttr getColumn(Node *x){
   TableAttr res;
   res.attrName = (x->str).c_str();
-  res.tableName = getFlag(x->flag, 1) ? (x->primary).c_str() : NULL; 
+  res.tableName = Node::getFlag(x->flag, 1) ? (x->primary).c_str() : NULL; 
   return res;
 }
+
+Value getValue(Node *x);
+
 Condition getCondition(Node *x){
   Condition res;
   for(std::vector<Node *>::reverse_iterator i = x->subtree.rbegin(); i != x->subtree.rend(); ++i){
-    if(getFlag(x->flag, 3)){
+    if(Node::getFlag(x->flag, 3)){
       // Null judgement
-      if(getFlag(x->flag, 0)){
+      if(Node::getFlag(x->flag, 0)){
         // NOT NULL
         res.rIsValue = true;
         res.op = CompOp::NE_OP;  //differ
@@ -67,7 +70,7 @@ Condition getCondition(Node *x){
       }
     }
     else{
-      if(getFlag(flag, 2)){
+      if(Node::getFlag(x->flag, 2)){
         // Column
         res.rIsValue = false;
         res.lAttr = getColumn((*i)->subtree[0]);
@@ -145,6 +148,7 @@ void StmtNode::visit(){
   Column t;
   AttrType t_type;
   std::vector<Value> vlist;
+  std::vector<std::vector<Value> > vvlist;
   Value vt;
   std::vector<Condition> wlist;
   Condition wt;
@@ -193,13 +197,22 @@ void StmtNode::visit(){
       //TODO: add interface
       break;
     case INSERT_DATA:
+      vvlist.clear();
       for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
         vlist.clear();
         for(std::vector<Node *>::reverse_iterator j = (*i)->subtree.rbegin(); j != (*i)->subtree.rend(); ++j){
           vt = getValue(*j);
           vlist.push_back(vt);
         }
-        qm->insert(str.c_str(), vlist);
+        vvlist.push_back(vlist);
+      }
+      qm->insert(str.c_str(), vvlist);
+      for(std::vector<Node *>::reverse_iterator i = subtree.rbegin(); i != subtree.rend(); ++i){
+        vlist.clear();
+        for(std::vector<Node *>::reverse_iterator j = (*i)->subtree.rbegin(); j != (*i)->subtree.rend(); ++j){
+          vt = getValue(*j);
+          vlist.push_back(vt);
+        }
         for(std::vector<Value>::iterator j = vlist.begin(); j != vlist.end(); ++j){
           releaseValue(*j);
         }
@@ -226,7 +239,7 @@ void StmtNode::visit(){
         wt = getCondition(*i);
         wlist.push_back(wt);
       }
-      update(str.c_str(), tt, vt, wlist);
+      qm->update(str.c_str(), tt, vt, wlist);
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
         releaseCondition(*i);
       }
@@ -249,7 +262,7 @@ void StmtNode::visit(){
         wt = getCondition(*i);
         wlist.push_back(wt);
       }
-      select(tlist, slist, wlist);
+      qm->select(tlist, slist, wlist);
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
         releaseCondition(*i);
       }
@@ -267,7 +280,7 @@ void StmtNode::visit(){
         slist.push_back(((*i)->str).c_str());
       }
       wlist.clear();
-      select(tlist, slist, wlist);
+      qm->select(tlist, slist, wlist);
       break;
     default:
       break;
