@@ -22,11 +22,15 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                 const std::vector<Condition> &conditions)
 {
     string DBName = mSMManager->getDBName();
+    if (DBName == "") {
+        fprintf(stderr, "select error: please USE database first.\n");
+        return false;
+    }
     RM_FileHandle *fileHandle;
     vector<AttrInfoEx> attrInfos;
 
     int conditionNum = conditions.size();
-    fprintf(stdout, "condition num = %d\n", (int)conditions.size());
+    //fprintf(stdout, "condition num = %d\n", (int)conditions.size());
     vector<int> conditionIndex;
 
     vector<shared_ptr<RM_Record> > *selected = new vector<shared_ptr<RM_Record> >[tables.size()];
@@ -49,16 +53,16 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
             if (!flag) {
                 conditionIndex.push_back(-1);
             }
-            fprintf(stdout, "conditionIndex = %d\n", conditionIndex[i]);
+            //fprintf(stdout, "conditionIndex = %d\n", conditionIndex[i]);
         }
-        fprintf(stdout, "tableName = %s\n", fullTableName.c_str());
+        //fprintf(stdout, "tableName = %s\n", fullTableName.c_str());
         mRMManager->openFile(fullTableName.c_str(), fileHandle);
         int pageNum = fileHandle->getPageNum();
         vector<shared_ptr<RM_Record> > records;
         for (int i = 1; i < pageNum; ++i) {
             fileHandle->getAllRecFromPage(i, records);
             int num = records.size();
-            fprintf(stdout, "page = %d, size = %d\n", i, num);
+            //fprintf(stdout, "page = %d, size = %d\n", i, num);
             for (int j = 0; j < num; ++j) {
                 bool flag = true;
                 for (int k = 0; k < conditionNum; ++k) {
@@ -67,7 +71,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                         break;
                     }
                 }
-                fprintf(stdout, "flag = %d\n", flag);
+                //fprintf(stdout, "flag = %d\n", flag);
                 if (flag) {
                     shared_ptr<RM_Record> ptr(new RM_Record(*records[j]));
                     selected[index].push_back(ptr);
@@ -76,7 +80,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
         }
         mRMManager->closeFile(fileHandle);
     }
-    fprintf(stdout, "selected size = %d\n", (int)selected[0].size());
+    //fprintf(stdout, "selected size = %d\n", (int)selected[0].size());
     if (tables.size() == 1) {
         const char *tableName = tables[0];
         string fullTableName = DBName + "/" + string(tableName);
@@ -114,6 +118,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
             }
             fprintf(stdout, "\n");
         }
+        fprintf(stdout, "\n");
         delete[] attrIndex;
     }
     delete[] selected;
@@ -123,12 +128,16 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
 bool QL_Manager::insert(const char *tableName, 
             const vector<vector<Value> > &allValues)
 {
-    //cout << "enter QL_Manager::insert" << endl;
+    cout << "enter QL_Manager::insert" << endl;
+    string DBName = mSMManager->getDBName();
+    if (DBName == "") {
+        fprintf(stderr, "insert error: please USE database first.\n");
+        return false;
+    }
     vector<AttrInfoEx> attrInfos;
     getAttrInfoEx(tableName, attrInfos);
 
     RM_FileHandle *fileHandle;
-    string DBName = mSMManager->getDBName();
     string fullTableName = DBName + "/" + string(tableName);
     mRMManager->openFile(fullTableName.c_str(), fileHandle);
 
@@ -137,10 +146,25 @@ bool QL_Manager::insert(const char *tableName,
     if (indexNo != -1) {
         mIXManager->openIndex(fullTableName.c_str(), indexNo, indexHandle);
     }
-
     int valueNum = allValues.size();
     for (int valueIndex = 0; valueIndex < valueNum; ++valueIndex) {
         const vector<Value> &values = allValues[valueIndex];
+        for (int i = 0; i < values.size(); ++i) {
+            if (attrInfos[i].attrType == INTEGER) {
+                if (values[i].data != NULL) {
+                    fprintf(stdout, "i = %d, value = %d\n", i, *(int *)values[i].data);
+                } else {
+                    fprintf(stdout, "i = %d, value = null\n");
+                }
+            }
+            if (attrInfos[i].attrType == STRING) {
+                if (values[i].data != NULL) {
+                    fprintf(stdout, "i = %d, value = %s\n", i, (char *)values[i].data);
+                } else {
+                    fprintf(stdout, "i = %d, value = null\n");
+                }
+            }
+        }
         if (values.size() != attrInfos.size()) {
             fprintf(stderr, "insert failed: wrong attributes size %d, expected %d\n", (int)values.size(), (int)attrInfos.size());
             continue;
@@ -166,16 +190,18 @@ bool QL_Manager::insert(const char *tableName,
         int total = 0;
         for (int i = 0; i < attrInfos.size(); ++i) {
             total += attrInfos[i].attrLength;
-            if (attrInfos[i].attrType == INTEGER) {
-                fprintf(stdout, "i = %d, value = %d\n", i, *(int *)values[i].data);
-            }
-            if (attrInfos[i].attrType == STRING) {
-                fprintf(stdout, "i = %d, value = %s\n", i, (char *)values[i].data);
-            }
+            // if (attrInfos[i].attrType == INTEGER) {
+            //     fprintf(stdout, "i = %d, value = %d\n", i, *(int *)values[i].data);
+            // }
+            // if (attrInfos[i].attrType == STRING) {
+            //     fprintf(stdout, "i = %d, value = %s\n", i, (char *)values[i].data);
+            // }
         }
         char *tData = new char[total];
         for (int i = 0; i < attrInfos.size(); ++i) {
-            memcpy(tData + attrInfos[i].offset, values[i].data, attrInfos[i].attrLength);
+            if (values[i].data != NULL) {
+                memcpy(tData + attrInfos[i].offset, values[i].data, attrInfos[i].attrLength);
+            }
         }
 
         RID rid;
@@ -192,7 +218,7 @@ bool QL_Manager::insert(const char *tableName,
         mIXManager->closeIndex(indexHandle);
     }
 
-    //cout << "leave QL_Manager::insert" << endl;
+    cout << "leave QL_Manager::insert" << endl;
     return true;
 }
 
@@ -201,6 +227,10 @@ bool QL_Manager::remove(const char *tableName,
 {
     //cout << "enter QL_Manager::remove" << endl;
     string DBName = mSMManager->getDBName();
+    if (DBName == "") {
+        fprintf(stderr, "delete error: please USE database first.\n");
+        return false;
+    }
     string fullTableName = DBName + "/" + string(tableName);
 
     int indexNo = getIndexNo(tableName);
@@ -270,6 +300,10 @@ bool QL_Manager::update(const char *tableName,
             const std::vector<Condition> &conditions)
 {
     string DBName = mSMManager->getDBName();
+    if (DBName == "") {
+        fprintf(stderr, "update error: please USE database first.\n");
+        return false;
+    }
     string fullTableName = DBName + "/" + string(tableName);
 
     int indexNo = getIndexNo(tableName);
@@ -350,7 +384,7 @@ bool QL_Manager::update(const char *tableName,
 bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
                           Condition condition, AttrInfoEx info)
 {
-    fprintf(stdout, "rIsValue = %d\n", condition.rIsValue);
+    //fprintf(stdout, "rIsValue = %d\n", condition.rIsValue);
     if (condition.rIsValue) {
         if (condition.op == NO_OP || condition.rValue.data == NULL) {
             return true;
@@ -360,7 +394,7 @@ bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
         if (info.attrType == INTEGER) {
             int attrValue = *((int *)data);
             int intValue = *((int *)condition.rValue.data);
-            fprintf(stdout, "condition data: %d %d\n", attrValue, intValue);
+            //fprintf(stdout, "condition data: %d %d\n", attrValue, intValue);
             switch (condition.op) {
                 case EQ_OP: return attrValue == intValue;
                 case LT_OP: return attrValue < intValue;
@@ -384,7 +418,7 @@ bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
             }
         } else if (info.attrType == STRING) {
             char *stringValue = (char *)condition.rValue.data;
-            fprintf(stdout, "%s\n%s\n", data, stringValue);
+            //fprintf(stdout, "%s\n%s\n", data, stringValue);
             int cmpResult = strncmp(data, stringValue, info.attrLength);
             // for (int i = 0; i < info.attrLength; ++i) {
             //     if (data[i] == 0 && stringValue[i] == 0) {

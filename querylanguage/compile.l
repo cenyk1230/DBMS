@@ -15,7 +15,7 @@ primary "PRIMARY"
 key "KEY"
 is "IS"
 not "NOT"
-null "NULL"
+null (NULL)|(null)
 and "AND"
 
 insert "INSERT"

@@ -59,13 +59,13 @@ Value getValue(Node *x){
       break;
     case Node::VARCHAR:
     case Node::STRING:
-      fprintf(stdout, "len = %d, x->str = %s\n", x->str.length(), x->str.c_str());
+      //fprintf(stdout, "len = %d, x->str = %s\n", x->str.length(), x->str.c_str());
       x->str += '\0';
-      fprintf(stdout, "len = %d, x->str = %s\n", x->str.length(), x->str.c_str());
+      //fprintf(stdout, "len = %d, x->str = %s\n", x->str.length(), x->str.c_str());
       charp = new char[x->str.size()];
       memcpy(charp, x->str.c_str(), x->str.size());
       res.data = (void *)charp;
-      fprintf(stdout, "res.data = %s\n", res.data);
+      //fprintf(stdout, "res.data = %s\n", res.data);
       charp = NULL;
       break;
     case Node::NULLDATA:
@@ -202,9 +202,9 @@ void StmtNode::visit(){
         vlist.clear();
         for(std::vector<Node *>::reverse_iterator j = (*i)->subtree.rbegin(); j != (*i)->subtree.rend(); ++j){
           vt = getValue(*j);
-          if (vt.attrType == AttrType::STRING) {
-            fprintf(stdout, "vt.data = %s\n", vt.data);
-          }
+          // if (vt.attrType == AttrType::STRING) {
+          //   fprintf(stdout, "vt.data = %s\n", vt.data);
+          // }
           vlist.push_back(vt);
         }
         vvlist.push_back(vlist);

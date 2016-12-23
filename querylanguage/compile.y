@@ -20,7 +20,7 @@ int yywrap();
 ALL: StmtList
 {
   $$ = $1;
-  $$->print();
+  //$$->print();
   
   $$->visit();
   
@@ -127,13 +127,13 @@ Row: Value
 {
   $$ = $3;
   $$->subtree.push_back($1);
-} | /*nothing*/ ',' Row
+} | NULLSIGN ',' Row
 {
-  $$ = $2;
+  $$ = $3;
   ValueNode *nullvalue = new ValueNode();
   nullvalue->datatype = Node::NULLDATA;
   $$->subtree.push_back(nullvalue);
-} | /*nothing*/
+} | NULLSIGN
 {
   $$ = new RowNode();
   ValueNode *nullvalue = new ValueNode();
