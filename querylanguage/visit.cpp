@@ -254,7 +254,9 @@ void StmtNode::visit(){
         wt = getCondition(*i);
         wlist.push_back(wt);
       }
+      printf("***Before calling select()***\n");
       qm->select(tlist, slist, wlist);
+      printf("***After calling select()***\n");
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
         releaseCondition(*i);
       }
