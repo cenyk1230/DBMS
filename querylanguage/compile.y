@@ -94,20 +94,20 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->str = $2->str;
   $$->subtree.push_back($4);
   $$->subtree.push_back($6);
-  $$->subtree.push_back($7);
+  $$->subtree.push_back($8);
 } | SELECT ColumnAccessList FROM IDENTIFIERLIST WHERE WhereClauseList ';'
 {
   $$ = new StmtNode();
   $$->stmttype = Node::SELECT_DATA;
   $$->subtree.push_back($2);
   $$->subtree.push_back($4);
-  $$->subtree.push_back($5);
+  $$->subtree.push_back($6);
 } | SELECT FROM IDENTIFIERLIST WHERE WhereClauseList ';'
 {
   $$ = new StmtNode();
   $$->stmttype = Node::SELECT_DATA_ALL;
   $$->subtree.push_back($3);
-  $$->subtree.push_back($4);
+  $$->subtree.push_back($5);
 };
 
 Rows: '(' Row ')' ',' Rows

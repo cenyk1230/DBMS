@@ -20,6 +20,7 @@ int main(int argc, char* argv[]){
   else
     fin = fopen(argv[1], "r");
   yyset_in(fin);
+  MyBitMap::initConst();
   fm = new FileManager();
   bpm = new BufPageManager(fm);
   rm = new RM_Manager(fm, bpm);

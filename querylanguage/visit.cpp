@@ -77,43 +77,42 @@ Value getValue(Node *x){
 
 Condition getCondition(Node *x){
   Condition res;
-  for(std::vector<Node *>::reverse_iterator i = x->subtree.rbegin(); i != x->subtree.rend(); ++i){
-    if(Node::getFlag(x->flag, 3)){
-      // Null judgement
-      if(Node::getFlag(x->flag, 0)){
-        // NOT NULL
-        res.rIsValue = true;
-        res.op = CompOp::NE_OP;  //differ
-        res.rValue.attrType = AttrType::NOTYPE;
-        res.rValue.data = NULL;
-        res.lAttr = getColumn((*i)->subtree[0]);
-      }
-      else{
-        // IS NULL
-        res.rIsValue = true;
-        res.op = CompOp::EQ_OP;  //differ
-        res.rValue.attrType = AttrType::NOTYPE;
-        res.rValue.data = NULL;
-        res.lAttr = getColumn((*i)->subtree[0]);
-      }
+  if(Node::getFlag(x->flag, 3)){
+    // Null judgement
+    if(Node::getFlag(x->flag, 0)){
+      // NOT NULL
+      res.rIsValue = true;
+      res.op = CompOp::NE_OP;  //differ
+      res.rValue.attrType = AttrType::NOTYPE;
+      res.rValue.data = NULL;
+      res.lAttr = getColumn(x->subtree[0]);
     }
     else{
-      if(Node::getFlag(x->flag, 2)){
-        // Column
-        res.rIsValue = false;
-        res.lAttr = getColumn((*i)->subtree[0]);
-        res.rAttr = getColumn((*i)->subtree[1]);
-        res.op = opAdapt((*i)->datatype);
-      }
-      else{
-        // Value
-        res.rIsValue = true;
-        res.op = opAdapt((*i)->datatype);
-        res.lAttr = getColumn((*i)->subtree[0]);
-        res.rValue = getValue((*i)->subtree[1]);
-      }
+      // IS NULL
+      res.rIsValue = true;
+      res.op = CompOp::EQ_OP;  //differ
+      res.rValue.attrType = AttrType::NOTYPE;
+      res.rValue.data = NULL;
+      res.lAttr = getColumn(x->subtree[0]);
     }
   }
+  else{
+    if(Node::getFlag(x->flag, 2)){
+      // Column
+      res.rIsValue = false;
+      res.lAttr = getColumn(x->subtree[0]);
+      res.rAttr = getColumn(x->subtree[1]);
+      res.op = opAdapt(x->datatype);
+    }
+    else{
+      // Value
+      res.rIsValue = true;
+      res.op = opAdapt(x->datatype);
+      res.lAttr = getColumn(x->subtree[0]);
+      res.rValue = getValue(x->subtree[1]);
+    }
+  }
+  return res;
 }
 
 void releaseValue(Value &v){
@@ -247,12 +246,10 @@ void StmtNode::visit(){
       slist.clear();
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         slist.push_back(((*i)->str).c_str());
-      }
       ptr = subtree[2];
       wlist.clear();
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         wt = getCondition(*i);
-        wlist.push_back(wt);
       }
       qm->select(tlist, slist, wlist);
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
