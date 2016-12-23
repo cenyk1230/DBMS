@@ -27,7 +27,7 @@ public:
 
     bool select(const std::vector<TableAttr> &attrs, 
                 const std::vector<const char *> &tables, 
-                const std::vector<Condition> &conditions);
+                std::vector<Condition> &conditions);
     bool insert(const char *tableName, 
                 const std::vector<std::vector<Value> > &values);
     bool remove(const char *tableName, 

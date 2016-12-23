@@ -1,4 +1,6 @@
+#include <iostream>
 #include <cmath>
+#include <cassert>
 
 #include "QL_Manager.h"
 
@@ -17,9 +19,26 @@ QL_Manager::~QL_Manager() {
 
 }
 
+vector<shared_ptr<RM_Record> > *selected;
+static int offset1;
+static int offset2;
+static int ti1, ti2, ti3;
+
+bool cmp1(int i, int j) {
+    int v1 = *(int *)(selected[ti1][i]->getData() + offset1);
+    int v2 = *(int *)(selected[ti1][j]->getData() + offset1);
+    return v1 < v2;
+}
+
+bool cmp2(const shared_ptr<RM_Record> &p1, const shared_ptr<RM_Record> &p2) {
+    int v1 = *(int *)(p1->getData() + offset2);
+    int v2 = *(int *)(p2->getData() + offset2);
+    return v1 < v2;
+}
+
 bool QL_Manager::select(const std::vector<TableAttr> &attrs, 
                 const std::vector<const char *> &tables, 
-                const std::vector<Condition> &conditions)
+                std::vector<Condition> &conditions)
 {
     string DBName = mSMManager->getDBName();
     if (DBName == "") {
@@ -33,7 +52,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
     //fprintf(stdout, "condition num = %d\n", (int)conditions.size());
     vector<int> conditionIndex;
 
-    vector<shared_ptr<RM_Record> > *selected = new vector<shared_ptr<RM_Record> >[tables.size()];
+    selected = new vector<shared_ptr<RM_Record> >[tables.size()];
 
     for (int index = 0; index < tables.size(); ++index) {
         const char *tableName = tables[index];
@@ -44,7 +63,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
         for (int i = 0; i < conditionNum; ++i) {
             bool flag = false;
             for (int j = 0; j < attrInfos.size(); ++j) {
-                if (string(conditions[i].lAttr.attrName) == string(attrInfos[j].attrName)) {
+                if (conditions[i].rIsValue && string(conditions[i].lAttr.attrName) == string(attrInfos[j].attrName)) {
                     flag = true;
                     conditionIndex.push_back(j);
                     break;
@@ -55,14 +74,14 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
             }
             //fprintf(stdout, "conditionIndex = %d\n", conditionIndex[i]);
         }
-        //fprintf(stdout, "tableName = %s\n", fullTableName.c_str());
+        fprintf(stdout, "tableName = %s\n", fullTableName.c_str());
         mRMManager->openFile(fullTableName.c_str(), fileHandle);
         int pageNum = fileHandle->getPageNum();
         vector<shared_ptr<RM_Record> > records;
         for (int i = 1; i < pageNum; ++i) {
             fileHandle->getAllRecFromPage(i, records);
             int num = records.size();
-            //fprintf(stdout, "page = %d, size = %d\n", i, num);
+            fprintf(stdout, "page = %d, size = %d\n", i, num);
             for (int j = 0; j < num; ++j) {
                 bool flag = true;
                 for (int k = 0; k < conditionNum; ++k) {
@@ -71,7 +90,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                         break;
                     }
                 }
-                //fprintf(stdout, "flag = %d\n", flag);
+                fprintf(stdout, "flag = %d\n", flag);
                 if (flag) {
                     shared_ptr<RM_Record> ptr(new RM_Record(*records[j]));
                     selected[index].push_back(ptr);
@@ -80,7 +99,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
         }
         mRMManager->closeFile(fileHandle);
     }
-    //fprintf(stdout, "selected size = %d\n", (int)selected[0].size());
+    fprintf(stdout, "selected[0] size = %d\n", (int)selected[0].size());
     if (tables.size() == 1) {
         const char *tableName = tables[0];
         string fullTableName = DBName + "/" + string(tableName);
@@ -118,17 +137,25 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                     fprintf(stdout, "%-25.6f ", *(float *)(ptr->getData() + offset));
                 } else if (attrType == STRING) {
                     char *tmp = (char *)(ptr->getData() + offset);
-                    bool isNull = true;
-                    for (int k = 0; k < attrInfos[attrIndex[j]].attrLength - 1; ++k) {
-                        if (tmp[k] != -1) {
-                            isNull = false;
-                            break;
+                    if (attrInfos[attrIndex[j]].attrLength == 1) {
+                        if (tmp[0] == -1) {
+                            fprintf(stdout, "%-25s ", "null");
+                        } else {
+                            fprintf(stdout, "%-25c ", tmp[0]);
                         }
+                    } else {
+                        bool isNull = true;
+                        for (int k = 0; k < attrInfos[attrIndex[j]].attrLength - 1; ++k) {
+                            if (tmp[k] != -1) {
+                                isNull = false;
+                                break;
+                            }
+                        }
+                        if (!isNull)
+                            fprintf(stdout, "%-25s ", tmp);
+                        else 
+                            fprintf(stdout, "%-25s ", "null");
                     }
-                    if (!isNull)
-                        fprintf(stdout, "%-25s ", tmp);
-                    else 
-                        fprintf(stdout, "%-25s ", "null");
                 }
             }
             fprintf(stdout, "\n");
@@ -136,7 +163,188 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
         fprintf(stdout, "\n");
         delete[] attrIndex;
     } else {
-
+        vector<shared_ptr<RM_Record> > selected0, selected1, selected2;
+        vector<AttrInfoEx> *infos = new vector<AttrInfoEx>[tables.size()];
+        bool *isJoined = new bool[tables.size()];
+        for (int i = 0; i < tables.size(); ++i) {
+            isJoined[i] = false;
+            getAttrInfoEx(tables[i], infos[i]);
+        }
+        for (int i = 0; i < conditionNum; ++i) {
+            if (conditions[i].rIsValue)
+                continue;
+            if (conditions[i].op != EQ_OP) {
+                fprintf(stdout, "select error: wrong condition\n");
+                delete[] isJoined;
+                delete[] infos;
+                delete[] selected;
+                return false;
+            }
+            if (conditions[i].lAttr.tableName == NULL) {
+                for (int j = 0; j < tables.size(); ++j) {
+                    for (int k = 0; k < infos[j].size(); ++k)
+                        if (string(conditions[i].lAttr.attrName) == infos[j][k].attrName) {
+                            conditions[i].lAttr.tableName = tables[j];
+                        }
+                }
+            }
+            if (conditions[i].rAttr.tableName == NULL) {
+                for (int j = 0; j < tables.size(); ++j) {
+                    for (int k = 0; k < infos[j].size(); ++k)
+                        if (string(conditions[i].rAttr.attrName) == infos[j][k].attrName) {
+                            conditions[i].rAttr.tableName = tables[j];
+                        }
+                }
+            }
+            ti1 = -1, ti2 = -1;
+            for (int j = 0; j < tables.size(); ++j) {
+                if (string(tables[j]) == string(conditions[i].lAttr.tableName)) {
+                    ti1 = j;
+                    continue;
+                }
+                if (string(tables[j]) == string(conditions[i].rAttr.tableName)) {
+                    ti2 = j;
+                    continue;
+                }
+            }
+            if (ti1 == -1 || ti2 == -1) {
+                fprintf(stdout, "select error: can't find the table in condition\n");
+                return false;
+            }
+            if (isJoined[ti2]) {
+                swap(ti1, ti2);
+                swap(conditions[i].lAttr, conditions[i].rAttr);
+            }
+            cout << ti1 << " " << ti2 << endl;
+            ti3 = 3 - ti1 - ti2;
+            offset1 = -1;
+            offset2 = -1;
+            for (int j = 0; j < infos[ti1].size(); ++j) {
+                if (string(conditions[i].lAttr.attrName) == infos[ti1][j].attrName) {
+                    offset1 = infos[ti1][j].offset;
+                }
+            }
+            for (int j = 0; j < infos[ti2].size(); ++j) {
+                if (string(conditions[i].rAttr.attrName) == infos[ti2][j].attrName) {
+                    offset2 = infos[ti2][j].offset;
+                }
+            }
+            vector<int> sortIndex;
+            for (int j = 0; j < selected[ti1].size(); ++j)
+                sortIndex.push_back(j);
+            //sort(selected[ti1].begin(), selected[ti1].end(), cmp1);
+            sort(sortIndex.begin(), sortIndex.end(), cmp1);
+            sort(selected[ti2].begin(), selected[ti2].end(), cmp2);
+            selected0.clear();
+            selected1.clear();
+            selected2.clear();
+            int len1 = selected[ti1].size();
+            int len2 = selected[ti2].size();
+            int j = 0, k = 0;
+            while (j < len1 && k < len2) {
+                int v1 = *(int *)(selected[ti1][sortIndex[j]]->getData() + offset1);
+                int v2 = *(int *)(selected[ti2][k]->getData() + offset2);
+                fprintf(stdout, "j = %d, k = %d, v1 = %d, v2 = %d\n", j, k, v1, v2);
+                if (v1 == v2) {
+                    selected0.push_back(selected[ti1][sortIndex[j]]);
+                    selected1.push_back(selected[ti2][k]);
+                    if (isJoined[ti1] && tables.size() > 2) {
+                        selected2.push_back(selected[ti3][sortIndex[j]]);
+                    }
+                    ++j;
+                    ++k;
+                } else if (v1 < v2) {
+                    ++j;
+                } else {
+                    ++k;
+                }
+            }
+            selected[ti1].clear();
+            selected[ti2].clear();
+            if (isJoined[ti1] && tables.size() > 2) {
+                selected[ti3].clear();
+            }
+            int len = selected0.size();
+            for (int j = 0; j < len; ++j) {
+                selected[ti1].push_back(selected0[j]);
+                selected[ti2].push_back(selected1[j]);
+                if (isJoined[ti1] && tables.size() > 2) {
+                    selected[ti3].push_back(selected2[j]);
+                }
+            }
+            isJoined[ti1] = true;
+            isJoined[ti2] = true;
+        }
+        int num = selected[0].size();
+        fprintf(stdout, "num = %d\n", (int)selected[0].size());
+        for (int i = 1; i < tables.size(); ++i) {
+            assert((int)selected[i].size() == num);
+        }
+        vector<pair<int, int> > attrIndexes;
+        for (int i = 0; i < attrs.size(); ++i) {
+            if (attrs[i].tableName != NULL) {
+                fprintf(stdout, "%-25s ", (string(attrs[i].tableName) + "." + string(attrs[i].attrName)).c_str());
+            } else {
+                fprintf(stdout, "%-25s ", attrs[i].attrName);
+            }
+            for (int j = 0; j < tables.size(); ++j)
+                if (attrs[i].tableName == NULL || string(attrs[i].tableName) == string(tables[j])) {
+                    bool flag = false;
+                    for (int k = 0; k < infos[j].size(); ++k) {
+                        //cout << "attrName: " << string(attrs[i].attrName) << " " << string(infos[j][k].attrName) << endl;
+                        if (string(attrs[i].attrName) == string(infos[j][k].attrName)) {
+                            flag = true;
+                            attrIndexes.push_back(make_pair(j, k));
+                            break;
+                        }
+                    }
+                    if (flag) {
+                        break;
+                    }
+            }
+        }
+        fprintf(stdout, "\n");
+        assert(attrIndexes.size() == attrs.size());
+        for (int i = 0; i < num; ++i) {
+            for (int j = 0; j < attrs.size(); ++j) {
+                int x = attrIndexes[j].first;
+                int y = attrIndexes[j].second;
+                if (infos[x][y].attrType == INTEGER) {
+                    int tmp = *(int *)(selected[x][i]->getData() + infos[x][y].offset);
+                    if (tmp != -1)
+                        fprintf(stdout, "%-25d ", tmp);
+                    else
+                        fprintf(stdout, "%-25s ", "null");
+                } else if (infos[x][y].attrType == FLOAT) {
+                    fprintf(stdout, "%-25.6f ", *(float *)(selected[x][i]->getData() + infos[x][y].offset));
+                } else if (infos[x][y].attrType == STRING) {
+                    char *tmp = (char *)(selected[x][i]->getData() + infos[x][y].offset);
+                    if (infos[x][y].attrLength == 1) {
+                        if (tmp[0] == -1) {
+                            fprintf(stdout, "%-25s ", "null");
+                        } else {
+                            fprintf(stdout, "%-25c ", tmp[0]);
+                        }
+                    } else {
+                        bool isNull = true;
+                        for (int k = 0; k < infos[x][y].attrLength - 1; ++k) {
+                            if (tmp[k] != -1) {
+                                isNull = false;
+                                break;
+                            }
+                        }
+                        if (!isNull)
+                            fprintf(stdout, "%-25s ", tmp);
+                        else 
+                            fprintf(stdout, "%-25s ", "null");
+                    }
+                }
+            }
+            fprintf(stdout, "\n");
+        }
+        fprintf(stdout, "\n");
+        delete[] isJoined;
+        delete[] infos;
     }
     delete[] selected;
     return true;
