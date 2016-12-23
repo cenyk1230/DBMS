@@ -246,6 +246,7 @@ void StmtNode::visit(){
       slist.clear();
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         slist.push_back(((*i)->str).c_str());
+      }
       ptr = subtree[2];
       wlist.clear();
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
