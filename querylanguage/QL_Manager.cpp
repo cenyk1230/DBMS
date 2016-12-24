@@ -74,14 +74,14 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
             }
             //fprintf(stdout, "conditionIndex = %d\n", conditionIndex[i]);
         }
-        fprintf(stdout, "tableName = %s\n", fullTableName.c_str());
+        //fprintf(stdout, "tableName = %s\n", fullTableName.c_str());
         mRMManager->openFile(fullTableName.c_str(), fileHandle);
         int pageNum = fileHandle->getPageNum();
         vector<shared_ptr<RM_Record> > records;
         for (int i = 1; i < pageNum; ++i) {
             fileHandle->getAllRecFromPage(i, records);
             int num = records.size();
-            fprintf(stdout, "page = %d, size = %d\n", i, num);
+            //fprintf(stdout, "page = %d, size = %d\n", i, num);
             for (int j = 0; j < num; ++j) {
                 bool flag = true;
                 for (int k = 0; k < conditionNum; ++k) {
@@ -90,7 +90,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                         break;
                     }
                 }
-                fprintf(stdout, "flag = %d\n", flag);
+                //fprintf(stdout, "flag = %d\n", flag);
                 if (flag) {
                     shared_ptr<RM_Record> ptr(new RM_Record(*records[j]));
                     selected[index].push_back(ptr);
@@ -99,7 +99,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
         }
         mRMManager->closeFile(fileHandle);
     }
-    fprintf(stdout, "selected[0] size = %d\n", (int)selected[0].size());
+    //fprintf(stdout, "selected[0] size = %d\n", (int)selected[0].size());
     if (tables.size() == 1) {
         const char *tableName = tables[0];
         string fullTableName = DBName + "/" + string(tableName);
@@ -118,7 +118,9 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
             }
         }
         for (int i = 0; i < attrs.size(); ++i) {
-            fprintf(stdout, "%-25s ", attrs[i].attrName);
+            fprintf(stdout, "%s", attrs[i].attrName);
+            if (i + 1 != attrs.size())
+                fprintf(stdout, ",");
         }
         fprintf(stdout, "\n");
         int num = selected[0].size();
@@ -130,18 +132,18 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                 if (attrType == INTEGER) {
                     int tmp = *(int *)(ptr->getData() + offset);
                     if (tmp != -1)
-                        fprintf(stdout, "%-25d ", tmp);
+                        fprintf(stdout, "%d", tmp);
                     else
-                        fprintf(stdout, "%-25s ", "null");
+                        fprintf(stdout, "%s", "null");
                 } else if (attrType == FLOAT) {
-                    fprintf(stdout, "%-25.6f ", *(float *)(ptr->getData() + offset));
+                    fprintf(stdout, "%.6f", *(float *)(ptr->getData() + offset));
                 } else if (attrType == STRING) {
                     char *tmp = (char *)(ptr->getData() + offset);
                     if (attrInfos[attrIndex[j]].attrLength == 1) {
                         if (tmp[0] == -1) {
-                            fprintf(stdout, "%-25s ", "null");
+                            fprintf(stdout, "%s", "null");
                         } else {
-                            fprintf(stdout, "%-25c ", tmp[0]);
+                            fprintf(stdout, "%c", tmp[0]);
                         }
                     } else {
                         bool isNull = true;
@@ -152,11 +154,13 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                             }
                         }
                         if (!isNull)
-                            fprintf(stdout, "%-25s ", tmp);
+                            fprintf(stdout, "%s", tmp);
                         else 
-                            fprintf(stdout, "%-25s ", "null");
+                            fprintf(stdout, "%s", "null");
                     }
                 }
+                if (j + 1 != attrs.size())
+                    fprintf(stdout, ",");
             }
             fprintf(stdout, "\n");
         }
@@ -215,7 +219,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                 swap(ti1, ti2);
                 swap(conditions[i].lAttr, conditions[i].rAttr);
             }
-            cout << ti1 << " " << ti2 << endl;
+            //cout << ti1 << " " << ti2 << endl;
             ti3 = 3 - ti1 - ti2;
             offset1 = -1;
             offset2 = -1;
@@ -244,7 +248,7 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
             while (j < len1 && k < len2) {
                 int v1 = *(int *)(selected[ti1][sortIndex[j]]->getData() + offset1);
                 int v2 = *(int *)(selected[ti2][k]->getData() + offset2);
-                fprintf(stdout, "j = %d, k = %d, v1 = %d, v2 = %d\n", j, k, v1, v2);
+                //fprintf(stdout, "j = %d, k = %d, v1 = %d, v2 = %d\n", j, k, v1, v2);
                 if (v1 == v2) {
                     selected0.push_back(selected[ti1][sortIndex[j]]);
                     selected1.push_back(selected[ti2][k]);
@@ -276,17 +280,19 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
             isJoined[ti2] = true;
         }
         int num = selected[0].size();
-        fprintf(stdout, "num = %d\n", (int)selected[0].size());
+        //fprintf(stdout, "num = %d\n", (int)selected[0].size());
         for (int i = 1; i < tables.size(); ++i) {
             assert((int)selected[i].size() == num);
         }
         vector<pair<int, int> > attrIndexes;
         for (int i = 0; i < attrs.size(); ++i) {
             if (attrs[i].tableName != NULL) {
-                fprintf(stdout, "%-25s ", (string(attrs[i].tableName) + "." + string(attrs[i].attrName)).c_str());
+                fprintf(stdout, "%s", (string(attrs[i].tableName) + "." + string(attrs[i].attrName)).c_str());
             } else {
-                fprintf(stdout, "%-25s ", attrs[i].attrName);
+                fprintf(stdout, "%s", attrs[i].attrName);
             }
+            if (i + 1 != attrs.size())
+                fprintf(stdout, ",");
             for (int j = 0; j < tables.size(); ++j)
                 if (attrs[i].tableName == NULL || string(attrs[i].tableName) == string(tables[j])) {
                     bool flag = false;
@@ -312,18 +318,18 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                 if (infos[x][y].attrType == INTEGER) {
                     int tmp = *(int *)(selected[x][i]->getData() + infos[x][y].offset);
                     if (tmp != -1)
-                        fprintf(stdout, "%-25d ", tmp);
+                        fprintf(stdout, "%d", tmp);
                     else
-                        fprintf(stdout, "%-25s ", "null");
+                        fprintf(stdout, "%s", "null");
                 } else if (infos[x][y].attrType == FLOAT) {
-                    fprintf(stdout, "%-25.6f ", *(float *)(selected[x][i]->getData() + infos[x][y].offset));
+                    fprintf(stdout, "%.6f", *(float *)(selected[x][i]->getData() + infos[x][y].offset));
                 } else if (infos[x][y].attrType == STRING) {
                     char *tmp = (char *)(selected[x][i]->getData() + infos[x][y].offset);
                     if (infos[x][y].attrLength == 1) {
                         if (tmp[0] == -1) {
-                            fprintf(stdout, "%-25s ", "null");
+                            fprintf(stdout, "%s", "null");
                         } else {
-                            fprintf(stdout, "%-25c ", tmp[0]);
+                            fprintf(stdout, "%c", tmp[0]);
                         }
                     } else {
                         bool isNull = true;
@@ -334,11 +340,13 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                             }
                         }
                         if (!isNull)
-                            fprintf(stdout, "%-25s ", tmp);
+                            fprintf(stdout, "%s", tmp);
                         else 
-                            fprintf(stdout, "%-25s ", "null");
+                            fprintf(stdout, "%s", "null");
                     }
                 }
+                if (j + 1 != attrs.size())
+                    fprintf(stdout, ",");
             }
             fprintf(stdout, "\n");
         }
@@ -374,22 +382,22 @@ bool QL_Manager::insert(const char *tableName,
     int valueNum = allValues.size();
     for (int valueIndex = 0; valueIndex < valueNum; ++valueIndex) {
         const vector<Value> &values = allValues[valueIndex];
-        for (int i = 0; i < values.size(); ++i) {
-            if (attrInfos[i].attrType == INTEGER) {
-                if (values[i].data != NULL) {
-                    fprintf(stdout, "i = %d, value = %d\n", i, *(int *)values[i].data);
-                } else {
-                    fprintf(stdout, "i = %d, value = null\n", i);
-                }
-            }
-            if (attrInfos[i].attrType == STRING) {
-                if (values[i].data != NULL) {
-                    fprintf(stdout, "i = %d, value = %s\n", i, (char *)values[i].data);
-                } else {
-                    fprintf(stdout, "i = %d, value = null\n", i);
-                }
-            }
-        }
+        // for (int i = 0; i < values.size(); ++i) {
+        //     if (attrInfos[i].attrType == INTEGER) {
+        //         if (values[i].data != NULL) {
+        //             fprintf(stdout, "i = %d, value = %d\n", i, *(int *)values[i].data);
+        //         } else {
+        //             fprintf(stdout, "i = %d, value = null\n", i);
+        //         }
+        //     }
+        //     if (attrInfos[i].attrType == STRING) {
+        //         if (values[i].data != NULL) {
+        //             fprintf(stdout, "i = %d, value = %s\n", i, (char *)values[i].data);
+        //         } else {
+        //             fprintf(stdout, "i = %d, value = null\n", i);
+        //         }
+        //     }
+        // }
         if (values.size() != attrInfos.size()) {
             fprintf(stderr, "insert failed: wrong attributes size %d, expected %d\n", (int)values.size(), (int)attrInfos.size());
             continue;
@@ -676,12 +684,16 @@ bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
                     v.erase(index);
                     v.insert(index, string(data), index, dataLen - len + 1);
                 }
+                if (v.length() != strlen(data)) {
+                    return false;
+                }
                 for (int i = 0; i < v.length(); ++i) {
                     if (v[i] == '_') {
-                        v.replace(i, 1, string(data), i, 1);
+                        v[i] = data[i];
                     }
                 }
-                return strncmp(data, v.c_str(), info.attrLength);
+                //fprintf(stdout, "%s %s\n", data, v.c_str());
+                return strncmp(data, v.c_str(), info.attrLength) == 0;
             }
             int cmpResult = strncmp(data, stringValue, info.attrLength);
             // for (int i = 0; i < info.attrLength; ++i) {

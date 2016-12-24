@@ -45,6 +45,7 @@ leq "<="
 geq ">="
 les "<"
 gtr ">"
+like "LIKE"
 
 lp "("
 rp ")"
@@ -93,6 +94,7 @@ whitespace ([ \n\t])+
 {geq}     {return GEQ;}
 {les}     {return LES;}
 {gtr}     {return GTR;}
+{like}    {return LIKE;}
 {lp}      {return '(';}
 {rp}      {return ')';}
 {number}  {yylval = new Node(); sscanf(yytext, "%d", &yylval->number); return NUMBER;}

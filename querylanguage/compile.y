@@ -13,7 +13,7 @@ int yywrap();
 %token DATABASES SELECT INSERT INTO UPDATE DELETE FROM WHERE VALUES SET
 %token NUMBER CONSTSTR 
 %token AND IS NOT NULLSIGN
-%token EQU NEQ LEQ GEQ LES GTR
+%token EQU NEQ LEQ GEQ LES GTR LIKE
 %token INT_INPUT VARCHAR_INPUT FLOAT_INPUT STRING_INPUT
 %%
 
@@ -291,6 +291,9 @@ Op: EQU {
 } | GTR {
   $$ = new Node();
   $$->datatype = Node::OP_GTR;
+} | LIKE {
+  $$ = new Node();
+  $$->datatype = Node::OP_LIKE; 
 };
 
 

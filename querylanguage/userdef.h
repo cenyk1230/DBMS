@@ -52,6 +52,9 @@ class Node{
       case OP_GTR:
         res = ">";
         break;
+      case OP_LIKE:
+        res = "like";
+        break;
       default:
         res = "-*- error -*-";
         break;
@@ -110,6 +113,7 @@ class Node{
   const static int OP_GEQ = 3;
   const static int OP_LES = 4;
   const static int OP_GTR = 5;
+  const static int OP_LIKE = 6;
 
   int stmttype;
   int datatype;

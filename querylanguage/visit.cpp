@@ -35,6 +35,8 @@ CompOp opAdapt(int type){
       return CompOp::LT_OP;
     case Node::OP_GTR:
       return CompOp::GT_OP;
+    case Node::OP_LIKE:
+      return CompOp::LK_OP;
   }
 }
 
