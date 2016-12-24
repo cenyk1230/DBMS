@@ -702,8 +702,13 @@ bool QL_Manager::insert(const char *tableName,
                 }
             } else {
                 memset(tData + attrInfos[i].offset, 0xFF, attrInfos[i].attrLength);
-                if (attrInfos[i].attrType == STRING)
-                    tData[attrInfos[i].offset + attrInfos[i].attrLength - 1] = '\0';
+                if (attrInfos[i].attrType == STRING) {
+                    if (attrInfos[i].attrLength == 1) {
+                        tData[attrInfos[i].offset + attrInfos[i].attrLength - 1] = 0xFF;
+                    } else {
+                        tData[attrInfos[i].offset + attrInfos[i].attrLength - 1] = '\0';
+                    }
+                }
             }
         }
 
@@ -914,13 +919,20 @@ bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
 {
     //fprintf(stdout, "rIsValue = %d\n", condition.rIsValue);
     if (condition.rIsValue) {
-        if (condition.op == NO_OP || condition.rValue.data == NULL) {
+        if (condition.op == NO_OP) {
             return true;
         }
         char *data = ptrRec->getData();
         data = data + info.offset;
         if (info.attrType == INTEGER) {
             int attrValue = *((int *)data);
+            if (condition.rValue.attrType == NOTYPE || condition.rValue.data == NULL) {
+                switch (condition.op) {
+                    case EQ_OP: return attrValue == -1;
+                    case NE_OP: return attrValue != -1;
+                    default: return false;
+                }
+            }
             int intValue = *((int *)condition.rValue.data);
             //fprintf(stdout, "condition data: %d %d\n", attrValue, intValue);
             switch (condition.op) {
@@ -934,6 +946,9 @@ bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
             }
         } else if (info.attrType == FLOAT) {
             float attrValue = *((float *)data);
+            if (condition.rValue.attrType == NOTYPE || condition.rValue.data == NULL) {
+                return false;
+            }
             float floatValue = *((float *)condition.rValue.data);
             switch (condition.op) {
                 case EQ_OP: return fabs(attrValue - floatValue) < EPS;
@@ -945,6 +960,29 @@ bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
                 default: return false;
             }
         } else if (info.attrType == STRING) {
+            if (condition.rValue.attrType == NOTYPE || condition.rValue.data == NULL) {
+                bool isNull;
+                if (info.attrLength == 1) {
+                    if (data[0] == -1) {
+                        isNull = true;
+                    } else {
+                        isNull = false;
+                    }
+                } else {
+                    isNull = true;
+                    for (int k = 0; k < info.attrLength - 1; ++k) {
+                        if (data[k] != -1) {
+                            isNull = false;
+                            break;
+                        }
+                    }
+                }
+                switch (condition.op) {
+                    case EQ_OP: return isNull == true;
+                    case NE_OP: return isNull == false;
+                    default: return false;
+                }
+            }
             char *stringValue = (char *)condition.rValue.data;
             //fprintf(stdout, "%s\n%s\n", data, stringValue);
             if (condition.op == LK_OP) {
