@@ -20,6 +20,7 @@ private:
                           AttrInfoEx info);
     int getIndexNo(const char *tableName);
     void getAttrInfoEx(const char *tableName, vector<AttrInfoEx> &attrs);
+    void getRange(std::string tableName, std::string attrName, int &l, int &r);
 
 public:
     QL_Manager(SM_Manager *sm, IX_Manager *ix, RM_Manager *rm);
@@ -36,6 +37,10 @@ public:
                 const TableAttr &attr,
                 const Value &value,
                 const std::vector<Condition> &conditions);
+    bool selectGB(const std::vector<TableAttrEx> &attrs,
+                  const char *tableName,
+                  const char *attrName,
+                  const std::vector<Condition> &conditions);
 };
 
 #endif // __QL_MANAGER_H__

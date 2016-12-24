@@ -10,6 +10,7 @@
 using namespace std;
 
 extern const int MAX_NAME_LEN;
+extern const int MAX_ATTR_LEN;
 
 SM_Manager::SM_Manager(IX_Manager *ix, RM_Manager *rm) {
     mIXManager = ix;
@@ -35,7 +36,7 @@ bool SM_Manager::createDB(const char *DBName) {
 
     char attrcat[MAX_NAME_LEN + 20];
     sprintf(attrcat, "%s/attrcat", DBName);
-    mRMManager->createFile(attrcat, MAX_NAME_LEN * 2 + 20);
+    mRMManager->createFile(attrcat, MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4 + MAX_ATTR_LEN);
 
     return true;
 }
@@ -121,7 +122,7 @@ bool SM_Manager::createTable(const char *tableName, const char *primaryKey, cons
     mRMManager->openFile(attrcat.c_str(), handle);
     int offset = 0;
     for (int i = 0; i < attrCount; ++i) {
-        pData = new char[MAX_NAME_LEN * 2 + 20];
+        pData = new char[MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4 + MAX_ATTR_LEN];
         for (int i = 0; i < MAX_NAME_LEN; ++i) {
             if (i < len)
                 pData[i] = tableName[i];
@@ -145,7 +146,11 @@ bool SM_Manager::createTable(const char *tableName, const char *primaryKey, cons
         else
             data[3] = -1;
         data[4] = (unsigned int)attributes[i].nullable;
+        data[5] = 0;
         
+        data = (BufType)(pData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2);
+        data[0] = 0;
+
         handle->insertRec(pData, rid);
         offset += attributes[i].attrLength;
         delete[] pData;
@@ -222,4 +227,72 @@ bool SM_Manager::showTable(const char *tableName) {
 
 string SM_Manager::getDBName() {
     return mDBName;
+}
+
+bool SM_Manager::alterCheck(TableAttr tableAttr, const std::vector<Value> &values) {
+    RM_FileHandle *handle;
+    string attrcat = mDBName + "/attrcat"; 
+    mRMManager->openFile(attrcat.c_str(), handle);
+
+    string tableNameStr(tableAttr.tableName);
+    string attrNameStr(tableAttr.attrName);
+    int pageNum = handle->getPageNum();
+    vector<shared_ptr<RM_Record> > records;
+    for (int i = 1; i < pageNum; ++i) {
+        handle->getAllRecFromPage(i, records);
+        int num = records.size();
+        for (int j = 0; j < num; ++j) {
+            shared_ptr<RM_Record> rec = records[j];
+            char *pData = rec->getData();
+            string tableNameTmp(pData);
+            if (tableNameStr != tableNameTmp)
+                continue;
+            string attrNameTmp(pData + MAX_NAME_LEN);
+            if (attrNameStr != attrNameTmp)
+                continue;
+            BufType data = (BufType)(pData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2);
+            data[0] = values.size();
+            char *cData = pData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4;
+            for (int k = 0; k < values.size(); ++k) {
+                int len = min(MAX_ATTR_LEN / values.size(), strlen((char *)values[k].data));
+                cData += MAX_ATTR_LEN / values.size() * k;
+                memcpy(cData, values[k].data, len);
+                cData[len] = 0;
+            }
+        }
+    }
+
+    return true;
+}
+
+bool SM_Manager::alterForeign(TableAttr tableAttr, TableAttr foreignAttr) {
+    RM_FileHandle *handle;
+    string attrcat = mDBName + "/attrcat"; 
+    mRMManager->openFile(attrcat.c_str(), handle);
+
+    string tableNameStr(tableAttr.tableName);
+    string attrNameStr(tableAttr.attrName);
+    int pageNum = handle->getPageNum();
+    vector<shared_ptr<RM_Record> > records;
+    for (int i = 1; i < pageNum; ++i) {
+        handle->getAllRecFromPage(i, records);
+        int num = records.size();
+        for (int j = 0; j < num; ++j) {
+            shared_ptr<RM_Record> rec = records[j];
+            char *pData = rec->getData();
+            string tableNameTmp(pData);
+            if (tableNameStr != tableNameTmp)
+                continue;
+            string attrNameTmp(pData + MAX_NAME_LEN);
+            if (attrNameStr != attrNameTmp)
+                continue;
+            BufType data = (BufType)(pData + MAX_NAME_LEN * 2 + 20);
+            data[0] = 1;
+            char *cData = pData + MAX_NAME_LEN * 2 + 20 + 4;
+            memcpy(cData, foreignAttr.tableName, MAX_NAME_LEN);
+            memcpy(cData + MAX_NAME_LEN, foreignAttr.attrName, MAX_NAME_LEN);
+        }
+    }
+
+    return true;
 }

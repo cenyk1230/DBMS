@@ -7,6 +7,7 @@
 using namespace std;
 
 extern const int MAX_NAME_LEN;
+extern const int MAX_ATTR_LEN;
 extern const double EPS;
 
 QL_Manager::QL_Manager(SM_Manager *sm, IX_Manager *ix, RM_Manager *rm) {
@@ -22,6 +23,7 @@ QL_Manager::~QL_Manager() {
 vector<shared_ptr<RM_Record> > *selected;
 static int offset1;
 static int offset2;
+static int offset3;
 static int ti1, ti2, ti3;
 
 bool cmp1(int i, int j) {
@@ -33,6 +35,12 @@ bool cmp1(int i, int j) {
 bool cmp2(const shared_ptr<RM_Record> &p1, const shared_ptr<RM_Record> &p2) {
     int v1 = *(int *)(p1->getData() + offset2);
     int v2 = *(int *)(p2->getData() + offset2);
+    return v1 < v2;
+}
+
+bool cmp3(const shared_ptr<RM_Record> &p1, const shared_ptr<RM_Record> &p2) {
+    int v1 = *(int *)(p1->getData() + offset3);
+    int v2 = *(int *)(p2->getData() + offset3);
     return v1 < v2;
 }
 
@@ -358,6 +366,198 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
     return true;
 }
 
+bool QL_Manager::selectGB(const std::vector<TableAttrEx> &attrs,
+              const char *tableName,
+              const char *attrName,
+              const std::vector<Condition> &conditions)
+{
+    string DBName = mSMManager->getDBName();
+    if (DBName == "") {
+        fprintf(stderr, "select error: please USE database first.\n");
+        return false;
+    }
+    RM_FileHandle *fileHandle;
+    vector<AttrInfoEx> attrInfos;
+
+    int conditionNum = conditions.size();
+    //fprintf(stdout, "condition num = %d\n", (int)conditions.size());
+    vector<int> conditionIndex;
+
+    vector<shared_ptr<RM_Record> > selectedGB;
+
+    string fullTableName = DBName + "/" + string(tableName);
+    getAttrInfoEx(tableName, attrInfos);
+
+    conditionIndex.clear();
+    for (int i = 0; i < conditionNum; ++i) {
+        bool flag = false;
+        for (int j = 0; j < attrInfos.size(); ++j) {
+            if (conditions[i].rIsValue && string(conditions[i].lAttr.attrName) == string(attrInfos[j].attrName)) {
+                flag = true;
+                conditionIndex.push_back(j);
+                break;
+            }
+        }
+        if (!flag) {
+            conditionIndex.push_back(-1);
+        }
+        //fprintf(stdout, "conditionIndex = %d\n", conditionIndex[i]);
+    }
+    //fprintf(stdout, "tableName = %s\n", fullTableName.c_str());
+    mRMManager->openFile(fullTableName.c_str(), fileHandle);
+    int pageNum = fileHandle->getPageNum();
+    vector<shared_ptr<RM_Record> > records;
+    for (int i = 1; i < pageNum; ++i) {
+        fileHandle->getAllRecFromPage(i, records);
+        int num = records.size();
+        //fprintf(stdout, "page = %d, size = %d\n", i, num);
+        for (int j = 0; j < num; ++j) {
+            bool flag = true;
+            for (int k = 0; k < conditionNum; ++k) {
+                if (conditionIndex[k] != -1 && !satisfyCondition(records[j], conditions[k], attrInfos[conditionIndex[k]])) {
+                    flag = false;
+                    break;
+                }
+            }
+            //fprintf(stdout, "flag = %d\n", flag);
+            if (flag) {
+                shared_ptr<RM_Record> ptr(new RM_Record(*records[j]));
+                selectedGB.push_back(ptr);
+            }
+        }
+    }
+    mRMManager->closeFile(fileHandle);
+
+    int groupIndex = -1;
+    for (int i = 0; i < attrInfos.size(); ++i)
+        if (string(attrName) == attrInfos[i].attrName) {
+            groupIndex = i;
+            break;
+        }
+    if (groupIndex == -1) {
+        fprintf(stdout, "select error: can't find the grouped attribute");
+        return false;
+    }
+
+    int *attrIndex = new int[attrs.size()];
+    for (int i = 0; i < attrs.size(); ++i) {
+        attrIndex[i] = -1;
+        for (int j = 0; j < attrInfos.size(); ++j) {
+            if (string(attrs[i].attrName) == string(attrInfos[j].attrName)) {
+                attrIndex[i] = j;
+            }
+        }
+        if (attrIndex[i] == -1) {
+            fprintf(stderr, "select failed: can't find selected attribute %s\n", attrs[i].attrName);
+            return false;
+        }
+    }
+
+    offset3 = attrInfos[groupIndex].offset;
+    sort(selectedGB.begin(), selectedGB.end(), cmp3);
+
+    vector<vector<Value> > res;
+    vector<Value> tmpRes;
+    int num = selectedGB.size();
+    for (int i = 0, j; i < num; ++i) {
+        j = i;
+        while (j + 1 < num) {
+            int v1 = *(int *)(selectedGB[i]->getData() + offset3);
+            int v2 = *(int *)(selectedGB[j + 1]->getData() + offset3);
+            if (v1 == v2) {
+                ++j;
+            } else {
+                break;
+            }
+        }
+        tmpRes.clear();
+        for (int z = 0; z < attrs.size(); ++z) {
+            if (attrs[z].func == NO_FUNC) {
+                Value value;
+                value.attrType = INTEGER;
+                int *intValue = new int;
+                *intValue = *(int *)(selectedGB[i]->getData() + attrInfos[attrIndex[z]].offset);
+                value.data = intValue;
+                tmpRes.push_back(value);
+                continue;
+            }
+            int minAttr = 1000000000, maxAttr = -1;
+            long long sumAttr = 0;
+            for (int k = i; k <= j; ++k) {
+                int v = *(int *)(selectedGB[k]->getData() + attrInfos[attrIndex[z]].offset);
+                if (v > maxAttr) {
+                    maxAttr = v;
+                }
+                if (v < minAttr) {
+                    minAttr = v;
+                }
+                sumAttr += v;
+            }
+            if (attrs[z].func == AVG_FUNC) {
+                Value value;
+                value.attrType = FLOAT;
+                float *floatValue = new float(sumAttr * 1.0 / (j - i + 1));
+                value.data = floatValue;
+                tmpRes.push_back(value);
+            } else if (attrs[z].func == SUM_FUNC) {
+                Value value;
+                value.attrType = LONGLONG;
+                long long *longValue = new long long;
+                *longValue = sumAttr;
+                value.data = longValue;
+                tmpRes.push_back(value);
+            } else if (attrs[z].func == MIN_FUNC) {
+                Value value;
+                value.attrType = INTEGER;
+                int *intValue = new int;
+                *intValue = minAttr;
+                value.data = intValue;
+                tmpRes.push_back(value);
+            } else if (attrs[z].func == MAX_FUNC) {
+                Value value;
+                value.attrType = INTEGER;
+                int *intValue = new int;
+                *intValue = maxAttr;
+                value.data = intValue;
+                tmpRes.push_back(value);
+            }
+        }
+        res.push_back(tmpRes);
+        i = j;
+    }
+    
+    for (int i = 0; i < attrs.size(); ++i) {
+        fprintf(stdout, "%s", attrs[i].attrName);
+        if (i + 1 != attrs.size())
+            fprintf(stdout, ",");
+    }
+    fprintf(stdout, "\n");
+
+    int resNum = res.size();
+    for (int i = 0; i < resNum; ++i) {
+        for (int j = 0; j < attrs.size(); ++j) {
+            AttrType attrType = res[i][j].attrType;
+            if (attrType == INTEGER) {
+                int tmp = *(int *)res[i][j].data;
+                fprintf(stdout, "%d", tmp);
+            } else if (attrType == FLOAT) {
+                float tmp = *(float *)res[i][j].data;
+                fprintf(stdout, "%.6f", tmp);
+            } else if (attrType == LONGLONG) {
+                long long tmp = *(long long *)res[i][j].data;
+                fprintf(stdout, "%lld", tmp);
+            }
+            if (j + 1 != attrs.size())
+                fprintf(stdout, ",");
+        }
+        fprintf(stdout, "\n");
+    }
+    fprintf(stdout, "\n");
+
+    delete[] attrIndex;
+    return true;
+}
+
 bool QL_Manager::insert(const char *tableName, 
             const vector<vector<Value> > &allValues)
 {
@@ -439,11 +639,45 @@ bool QL_Manager::insert(const char *tableName,
                 continue;
             }
         }
+        
+        vector<int> rangeL, rangeR;
+        for (int i = 0; i < attrInfos.size(); ++i) {
+            if (attrInfos[i].isForeignKey) {
+                int l, r;
+                getRange(attrInfos[i].foreignTable, attrInfos[i].foreignAttr, l, r);
+                rangeL.push_back(l);
+                rangeR.push_back(r);
+            } else {
+                rangeL.push_back(-1);
+                rangeR.push_back(1000000000);
+            }
+        }
 
         char *tData = new char[total];
         for (int i = 0; i < attrInfos.size(); ++i) {
             if (values[i].data != NULL) {
-                memcpy(tData + attrInfos[i].offset, values[i].data, attrInfos[i].attrLength);
+                if (attrInfos[i].isCheck) {
+                    bool outFlag = true;
+                    for (int j = 0; j < attrInfos[i].values.size(); ++j) {
+                        if (string((char *)values[i].data) == attrInfos[i].values[j]) {
+                            outFlag = false;
+                            break;
+                        }
+                    }
+                    if (outFlag) {
+                        fprintf(stdout, "insert error: attribute %s can't be %s\n", attrInfos[i].attrName.c_str(), (char *)values[i].data);
+                        return false;
+                    }
+                } else {
+                    memcpy(tData + attrInfos[i].offset, values[i].data, attrInfos[i].attrLength);
+                }
+                if (attrInfos[i].isForeignKey) {
+                    int v = *(int *)values[i].data;
+                    if (v < rangeL[i] || v > rangeR[i]) {
+                        fprintf(stdout, "insert error: attribute %s should be in foreign key constraint (%d, %d)\n", attrInfos[i].attrName.c_str(), rangeL[i], rangeR[i]);
+                        return false;
+                    }
+                }
             } else {
                 memset(tData + attrInfos[i].offset, 0xFF, attrInfos[i].attrLength);
                 if (attrInfos[i].attrType == STRING)
@@ -593,6 +827,31 @@ bool QL_Manager::update(const char *tableName,
         fprintf(stderr, "update failed: can't find the updated attribute %s\n", attr.attrName);
         return false;
     }
+
+    if (attrInfos[updateIndex].isCheck) {
+        bool outFlag = true;
+        for (int i = 0; i < attrInfos[updateIndex].values.size(); ++i) {
+            if (string((char *)value.data) == attrInfos[updateIndex].values[i]) {
+                outFlag = false;
+                break;
+            }
+        }
+        if (outFlag) {
+            fprintf(stdout, "update error: attribute %s can't be %s\n", attrInfos[updateIndex].attrName.c_str(), (char *)value.data);
+            return false;
+        }
+    }
+
+    if (attrInfos[updateIndex].isForeignKey) {
+        int v = *(int *)value.data;
+        int l, r;
+        getRange(attrInfos[updateIndex].foreignTable, attrInfos[updateIndex].foreignAttr, l, r);
+        if (v < l || v > r) {
+            fprintf(stdout, "update error: attribute %s should be in foreign key constraint (%d, %d)\n", attrInfos[updateIndex].attrName.c_str(), l, r);
+            return false;
+        }
+    }
+
     int pageNum = fileHandle->getPageNum();
     vector<shared_ptr<RM_Record> > records;
     for (int i = 1; i < pageNum; ++i) {
@@ -778,8 +1037,41 @@ void QL_Manager::getAttrInfoEx(const char *tableName, vector<AttrInfoEx> &attrIn
             info.attrLength = data[2];
             info.indexNo = data[3];
             info.nullable = (bool)data[4];
+
+            info.isForeignKey = (bool)data[5];
+            if (data[5]) {
+                info.foreignTable = string(pData + MAX_NAME_LEN * 2 + 20 + 4);
+                info.foreignAttr = string(pData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN);
+            }
+
+            data = (BufType)(pData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2);
+            int s = data[0];
+            info.isCheck = (s > 0);
+            vector<string> values;
+            char *cData = pData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4;
+            for (int i = 0; i < s; ++i) {
+                values.push_back(string(cData + (MAX_ATTR_LEN / s) * i));
+            }
+            info.values = values;
+
             attrInfos.push_back(info);
         }
     }
     mRMManager->closeFile(fileHandle);
+}
+
+void QL_Manager::getRange(std::string tableName, std::string attrName, int &l, int &r) {
+    l = -1;
+    r = 1000000000;
+
+    int indexNo = getIndexNo(tableName.c_str());
+
+    string DBName = mSMManager->getDBName();
+    string fullTableName = DBName + "/" + string(tableName);
+
+    IX_IndexHandle *indexHandle;
+    if (indexNo != -1) {
+        mIXManager->openIndex(fullTableName.c_str(), indexNo, indexHandle);
+    }
+    indexHandle->getRange(l, r);
 }

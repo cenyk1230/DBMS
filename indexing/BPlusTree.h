@@ -39,6 +39,7 @@ private:
     void dfs(BPlusNode *node);
     bool lessThan(void *pData, void *key);
     BPlusNode* getFirstDataNode();
+    BPlusNode* getLastDataNode();
     BPlusNode* search(BPlusNode *node, void *pData);
     void insertInLeaf(BPlusNode *node, void *pData, const RID &rid);
     void insertInInternal(BPlusNode *node, BPlusNode *sonNode, void *pData);
@@ -52,6 +53,7 @@ public:
     void insertEntry(void *pData, const RID &rid);
     bool deleteEntry(void *pData, const RID &rid);
     bool findEntry(void *pData);
+    void getRange(int &l, int &r);
     void getAllEntry(std::vector<std::pair<void *, RID> > &entries);
     BPlusNode* getRoot();
     void print(BPlusNode *node);

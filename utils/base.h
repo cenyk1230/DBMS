@@ -4,12 +4,14 @@
 #include <string>
 
 const int MAX_NAME_LEN = 20;
+const int MAX_ATTR_LEN = 24;
 const double EPS = 1e-6;
 
 enum AttrType {
 	INTEGER = 0,
 	FLOAT,
 	STRING,
+	LONGLONG,
 	NOTYPE
 };
 
@@ -22,6 +24,14 @@ enum CompOp {
 	NE_OP,
 	NO_OP,
 	LK_OP
+};
+
+enum GroupFunc {
+	AVG_FUNC = 0,
+	SUM_FUNC,
+	MIN_FUNC,
+	MAX_FUNC,
+	NO_FUNC
 };
 
 struct AttrInfo {
@@ -38,11 +48,22 @@ struct AttrInfoEx {
 	AttrType attrType;
 	int attrLength;
 	int indexNo;
+	bool isForeignKey;
+	std::string foreignTable;
+	std::string foreignAttr;
+	bool isCheck;
+	std::vector<std::string> values;
 };
 
 struct TableAttr {
 	const char *tableName;
 	const char *attrName;
+};
+
+struct TableAttrEx {
+	const char *tableName;
+	const char *attrName;
+	GroupFunc func;
 };
 
 struct Value {

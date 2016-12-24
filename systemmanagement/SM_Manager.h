@@ -28,6 +28,9 @@ public:
     bool dropTable(const char *tableName);
     bool showTable(const char *tableName);
 
+    bool alterCheck(TableAttr tableAttr, const std::vector<Value> &values);
+    bool alterForeign(TableAttr tableAttr, TableAttr foreignAttr);
+
     std::string getDBName();
 };
 

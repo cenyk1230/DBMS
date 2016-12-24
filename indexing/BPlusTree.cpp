@@ -321,6 +321,14 @@ BPlusNode* BPlusTree::getFirstDataNode() {
     return node;
 }
 
+BPlusNode *BPlusTree::getLastDataNode() {
+    BPlusNode *node = mRoot;
+    while (!node->isLeaf) {
+        node = node->son[node->num - 1];
+    }
+    return node;
+}
+
 void BPlusTree::getAllEntry(vector<pair<void *, RID> > &entries) {
     BPlusNode *node = getFirstDataNode();
     //cout << node->num << endl;
@@ -346,4 +354,11 @@ void BPlusTree::print(BPlusNode *node) {
     for (int i = 0; i < node->num; ++i) {
         print(node->son[i]);
     }
+}
+
+void BPlusTree::getRange(int &l, int &r) {
+    BPlusNode *node1 = getFirstDataNode();
+    BPlusNode *node2 = getLastDataNode();
+    l = *(int *)node1->key[0];
+    r = *(int *)node2->key[node2->num - 1];
 }

@@ -46,6 +46,10 @@ bool IX_IndexHandle::findEntry(void *pData) {
     return mBPlusTree->findEntry(pData);
 }
 
+void IX_IndexHandle::getRange(int &l, int &r) {
+    mBPlusTree->getRange(l, r);
+}
+
 bool IX_IndexHandle::forcePages() {
     //printBPlusTree();
     storeBPlusTree();
