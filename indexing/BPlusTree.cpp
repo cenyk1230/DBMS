@@ -357,8 +357,11 @@ void BPlusTree::print(BPlusNode *node) {
 }
 
 void BPlusTree::getRange(int &l, int &r) {
+    //print(mRoot);
     BPlusNode *node1 = getFirstDataNode();
     BPlusNode *node2 = getLastDataNode();
+    //cout << node1 << " " << node2 << " " << node1->num << endl;
     l = *(int *)node1->key[0];
     r = *(int *)node2->key[node2->num - 1];
+    //cout << l << " " << r << endl;
 }

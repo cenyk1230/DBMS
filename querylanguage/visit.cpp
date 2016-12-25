@@ -292,18 +292,18 @@ void StmtNode::visit(){
       }
       break;
     case SELECT_DATA_ALL:
-      ptr = subtree[0];
       tlist.clear();
-      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
-        tt = getColumn(*i);
-        tlist.push_back(tt);
-      }
-      ptr = subtree[1];
+      ptr = subtree[0];
       slist.clear();
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         slist.push_back(((*i)->str).c_str());
       }
+      ptr = subtree[1];
       wlist.clear();
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        wt = getCondition(*i);
+        wlist.push_back(wt);
+      }
       qm->select(tlist, slist, wlist);
       break;
     case SELECT_GROUP:

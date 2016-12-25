@@ -230,6 +230,7 @@ string SM_Manager::getDBName() {
 }
 
 bool SM_Manager::alterCheck(TableAttr tableAttr, const std::vector<Value> &values) {
+    //fprintf(stdout, "enter SM_Manager::alterCheck\n");
     RM_FileHandle *handle;
     string attrcat = mDBName + "/attrcat"; 
     mRMManager->openFile(attrcat.c_str(), handle);
@@ -250,22 +251,32 @@ bool SM_Manager::alterCheck(TableAttr tableAttr, const std::vector<Value> &value
             string attrNameTmp(pData + MAX_NAME_LEN);
             if (attrNameStr != attrNameTmp)
                 continue;
-            BufType data = (BufType)(pData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2);
+            char *nData = new char[MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4 + MAX_ATTR_LEN];
+            memcpy(nData, pData, MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4 + MAX_ATTR_LEN);
+            handle->deleteRec(rec->getRid());
+            BufType data = (BufType)(nData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2);
+            //fprintf(stdout, "values.size() = %d\n", (int)values.size());
             data[0] = values.size();
-            char *cData = pData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4;
+            char *cData = nData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4;
             for (int k = 0; k < values.size(); ++k) {
                 int len = min(MAX_ATTR_LEN / values.size(), strlen((char *)values[k].data));
                 cData += MAX_ATTR_LEN / values.size() * k;
                 memcpy(cData, values[k].data, len);
                 cData[len] = 0;
             }
+            RID rid;
+            handle->insertRec(nData, rid);
         }
     }
-
+    mRMManager->closeFile(handle);
+    //fprintf(stdout, "leave SM_Manager::alterCheck\n");
     return true;
 }
 
 bool SM_Manager::alterForeign(TableAttr tableAttr, TableAttr foreignAttr) {
+    //fprintf(stdout, "enter SM_Manager::alterForeign\n");
+    //fprintf(stdout, "%s\n%s\n", tableAttr.tableName, tableAttr.attrName);
+    //fprintf(stdout, "%s\n%s\n", foreignAttr.tableName, foreignAttr.attrName);
     RM_FileHandle *handle;
     string attrcat = mDBName + "/attrcat"; 
     mRMManager->openFile(attrcat.c_str(), handle);
@@ -286,13 +297,20 @@ bool SM_Manager::alterForeign(TableAttr tableAttr, TableAttr foreignAttr) {
             string attrNameTmp(pData + MAX_NAME_LEN);
             if (attrNameStr != attrNameTmp)
                 continue;
-            BufType data = (BufType)(pData + MAX_NAME_LEN * 2 + 20);
+            //fprintf(stdout, "%s %s\n", tableNameTmp.c_str(), attrNameTmp.c_str());
+            char *nData = new char[MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4 + MAX_ATTR_LEN];
+            memcpy(nData, pData, MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4 + MAX_ATTR_LEN);
+            handle->deleteRec(rec->getRid());
+            BufType data = (BufType)(nData + MAX_NAME_LEN * 2 + 20);
             data[0] = 1;
-            char *cData = pData + MAX_NAME_LEN * 2 + 20 + 4;
+            char *cData = nData + MAX_NAME_LEN * 2 + 20 + 4;
             memcpy(cData, foreignAttr.tableName, MAX_NAME_LEN);
             memcpy(cData + MAX_NAME_LEN, foreignAttr.attrName, MAX_NAME_LEN);
+            RID rid;
+            handle->insertRec(nData, rid);
         }
     }
-
+    mRMManager->closeFile(handle);
+    //fprintf(stdout, "leave SM_Manager::alterForeign\n");
     return true;
 }

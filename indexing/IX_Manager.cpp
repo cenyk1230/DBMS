@@ -61,6 +61,7 @@ bool IX_Manager::openIndex(const char *fileName, int indexNo, IX_IndexHandle *&i
 }
 
 bool IX_Manager::closeIndex(IX_IndexHandle *indexHandle) {
+    //fprintf(stdout, "IX_Manager::closeIndex\n");
     int fileID = indexHandle->getFileID();
     indexHandle->forcePages();
     delete indexHandle;

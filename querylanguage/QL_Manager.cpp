@@ -45,7 +45,7 @@ bool cmp3(const shared_ptr<RM_Record> &p1, const shared_ptr<RM_Record> &p2) {
     return v1 < v2;
 }
 
-bool QL_Manager::select(const std::vector<TableAttr> &attrs, 
+bool QL_Manager::select(std::vector<TableAttr> &attrs, 
                 const std::vector<const char *> &tables, 
                 std::vector<Condition> &conditions)
 {
@@ -62,6 +62,22 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
     vector<int> conditionIndex;
 
     selected = new vector<shared_ptr<RM_Record> >[tables.size()];
+
+    //cout << "attrs.size() = " << attrs.size() << endl;
+
+    vector<shared_ptr<string> > saves;
+    if (attrs.size() == 0) {
+        for (int i = 0; i < tables.size(); ++i) {
+            getAttrInfoEx(tables[i], attrInfos);
+            for (int j = 0; j < attrInfos.size(); ++j) {
+                TableAttr tmpAttr;
+                tmpAttr.tableName = tables[i];
+                saves.push_back(shared_ptr<string>(new string(attrInfos[j].attrName)));
+                tmpAttr.attrName = saves[saves.size() - 1]->c_str();
+                attrs.push_back(tmpAttr);
+            }
+        }
+    }
 
     for (int index = 0; index < tables.size(); ++index) {
         const char *tableName = tables[index];
@@ -112,11 +128,13 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
     if (tables.size() == 1) {
         const char *tableName = tables[0];
         string fullTableName = DBName + "/" + string(tableName);
+        //cout << tableName << endl;
         getAttrInfoEx(tableName, attrInfos);
         int *attrIndex = new int[attrs.size()];
         for (int i = 0; i < attrs.size(); ++i) {
             attrIndex[i] = -1;
             for (int j = 0; j < attrInfos.size(); ++j) {
+                //cout << attrs[i].attrName << " " << attrInfos[j].attrName << endl;
                 if (string(attrs[i].attrName) == string(attrInfos[j].attrName)) {
                     attrIndex[i] = j;
                 }
@@ -162,9 +180,10 @@ bool QL_Manager::select(const std::vector<TableAttr> &attrs,
                                 break;
                             }
                         }
-                        if (!isNull)
-                            fprintf(stdout, "%s", tmp);
-                        else 
+                        if (!isNull) {
+                            string printTmp(tmp, attrInfos[attrIndex[j]].attrLength);
+                            fprintf(stdout, "%s", printTmp.c_str());
+                        } else 
                             fprintf(stdout, "%s", "null");
                     }
                 }
@@ -584,7 +603,7 @@ bool QL_Manager::selectGB(const std::vector<TableAttrEx> &attrs,
 bool QL_Manager::insert(const char *tableName, 
             const vector<vector<Value> > &allValues)
 {
-    cout << "enter QL_Manager::insert" << endl;
+    //cout << "enter QL_Manager::insert" << endl;
     string DBName = mSMManager->getDBName();
     if (DBName == "") {
         fprintf(stderr, "insert failed: please USE database first.\n");
@@ -598,9 +617,22 @@ bool QL_Manager::insert(const char *tableName,
     mRMManager->openFile(fullTableName.c_str(), fileHandle);
 
     int indexNo = getIndexNo(tableName);
+    //fprintf(stdout, "indexNo = %d\n", indexNo);
     IX_IndexHandle *indexHandle;
     if (indexNo != -1) {
         mIXManager->openIndex(fullTableName.c_str(), indexNo, indexHandle);
+    }
+    vector<int> rangeL, rangeR;
+    for (int i = 0; i < attrInfos.size(); ++i) {
+        if (attrInfos[i].isForeignKey) {
+            int l, r;
+            getRange(attrInfos[i].foreignTable, attrInfos[i].foreignAttr, l, r);
+            rangeL.push_back(l);
+            rangeR.push_back(r);
+        } else {
+            rangeL.push_back(-1);
+            rangeR.push_back(1000000000);
+        }
     }
     int valueNum = allValues.size();
     for (int valueIndex = 0; valueIndex < valueNum; ++valueIndex) {
@@ -646,12 +678,6 @@ bool QL_Manager::insert(const char *tableName,
         int total = 0;
         for (int i = 0; i < attrInfos.size(); ++i) {
             total += attrInfos[i].attrLength;
-            // if (attrInfos[i].attrType == INTEGER) {
-            //     fprintf(stdout, "i = %d, value = %d\n", i, *(int *)values[i].data);
-            // }
-            // if (attrInfos[i].attrType == STRING) {
-            //     fprintf(stdout, "i = %d, value = %s\n", i, (char *)values[i].data);
-            // }
         }
 
         if (indexNo != -1) {
@@ -662,22 +688,12 @@ bool QL_Manager::insert(const char *tableName,
                 continue;
             }
         }
-        
-        vector<int> rangeL, rangeR;
-        for (int i = 0; i < attrInfos.size(); ++i) {
-            if (attrInfos[i].isForeignKey) {
-                int l, r;
-                getRange(attrInfos[i].foreignTable, attrInfos[i].foreignAttr, l, r);
-                rangeL.push_back(l);
-                rangeR.push_back(r);
-            } else {
-                rangeL.push_back(-1);
-                rangeR.push_back(1000000000);
-            }
-        }
 
+        bool consFlag = false;
         char *tData = new char[total];
         for (int i = 0; i < attrInfos.size(); ++i) {
+            //fprintf(stdout, "i = %d, isCheck = %d\n", i, attrInfos[i].isCheck);
+            //cout << i << " " << values[i].data << endl;
             if (values[i].data != NULL) {
                 if (attrInfos[i].isCheck) {
                     bool outFlag = true;
@@ -689,18 +705,20 @@ bool QL_Manager::insert(const char *tableName,
                     }
                     if (outFlag) {
                         fprintf(stdout, "insert failed: attribute %s can't be %s\n", attrInfos[i].attrName.c_str(), (char *)values[i].data);
-                        return false;
+                        consFlag = true;
+                        break;
                     }
-                } else {
-                    memcpy(tData + attrInfos[i].offset, values[i].data, attrInfos[i].attrLength);
                 }
                 if (attrInfos[i].isForeignKey) {
                     int v = *(int *)values[i].data;
                     if (v < rangeL[i] || v > rangeR[i]) {
                         fprintf(stdout, "insert failed: attribute %s should be in foreign key constraint (%d, %d)\n", attrInfos[i].attrName.c_str(), rangeL[i], rangeR[i]);
-                        return false;
+                        consFlag = true;
+                        break;
                     }
                 }
+                memcpy(tData + attrInfos[i].offset, (char *)values[i].data, attrInfos[i].attrLength);
+                //cout << string(tData + attrInfos[i].offset) << endl;
             } else {
                 memset(tData + attrInfos[i].offset, 0xFF, attrInfos[i].attrLength);
                 if (attrInfos[i].attrType == STRING) {
@@ -711,6 +729,10 @@ bool QL_Manager::insert(const char *tableName,
                     }
                 }
             }
+        }
+
+        if (consFlag) {
+            continue;
         }
 
         RID rid;
@@ -727,7 +749,7 @@ bool QL_Manager::insert(const char *tableName,
         mIXManager->closeIndex(indexHandle);
     }
 
-    cout << "leave QL_Manager::insert" << endl;
+    //cout << "leave QL_Manager::insert" << endl;
     return true;
 }
 
@@ -869,7 +891,7 @@ bool QL_Manager::update(const char *tableName,
             return false;
         }
     }
-
+    //fprintf(stdout, "isForeignKey = %d\n", attrInfos[updateIndex].isForeignKey);
     if (attrInfos[updateIndex].isForeignKey) {
         int v = *(int *)value.data;
         int l, r;
@@ -964,6 +986,7 @@ bool QL_Manager::satisfyCondition(shared_ptr<RM_Record> ptrRec,
             if (condition.rValue.attrType == NOTYPE || condition.rValue.data == NULL) {
                 bool isNull;
                 if (info.attrLength == 1) {
+                    //cout << (int)data[0] << endl;
                     if (data[0] == -1) {
                         isNull = true;
                     } else {
@@ -1100,6 +1123,7 @@ void QL_Manager::getAttrInfoEx(const char *tableName, vector<AttrInfoEx> &attrIn
             info.nullable = (bool)data[4];
 
             info.isForeignKey = (bool)data[5];
+            //fprintf(stdout, "%s %s %d\n", tableName, info.attrName.c_str(), data[5]);
             if (data[5]) {
                 info.foreignTable = string(pData + MAX_NAME_LEN * 2 + 20 + 4);
                 info.foreignAttr = string(pData + MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN);
@@ -1122,10 +1146,12 @@ void QL_Manager::getAttrInfoEx(const char *tableName, vector<AttrInfoEx> &attrIn
 }
 
 void QL_Manager::getRange(std::string tableName, std::string attrName, int &l, int &r) {
+    //cout << "enter QL_Manager::getRange" << endl;
     l = -1;
     r = 1000000000;
 
     int indexNo = getIndexNo(tableName.c_str());
+    //fprintf(stdout, "indexNo = %d\n", indexNo);
 
     string DBName = mSMManager->getDBName();
     string fullTableName = DBName + "/" + string(tableName);
@@ -1133,6 +1159,9 @@ void QL_Manager::getRange(std::string tableName, std::string attrName, int &l, i
     IX_IndexHandle *indexHandle;
     if (indexNo != -1) {
         mIXManager->openIndex(fullTableName.c_str(), indexNo, indexHandle);
+        indexHandle->getRange(l, r);
+        mIXManager->closeIndex(indexHandle);
     }
-    indexHandle->getRange(l, r);
+    
+    //cout << "leave QL_Manager::getRange" << endl;
 }

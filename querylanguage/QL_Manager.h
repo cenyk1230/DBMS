@@ -26,7 +26,7 @@ public:
     QL_Manager(SM_Manager *sm, IX_Manager *ix, RM_Manager *rm);
     ~QL_Manager();
 
-    bool select(const std::vector<TableAttr> &attrs, 
+    bool select(std::vector<TableAttr> &attrs, 
                 const std::vector<const char *> &tables, 
                 std::vector<Condition> &conditions);
     bool insert(const char *tableName, 
