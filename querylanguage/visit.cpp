@@ -264,10 +264,12 @@ void StmtNode::visit(){
       tt = getColumn(subtree[0]);
       vt = getValue(subtree[1]);
       wlist.clear();
-      ptr = subtree[2];
-      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
-        wt = getCondition(*i);
-        wlist.push_back(wt);
+      if (subtree.size() >= 3) {
+        ptr = subtree[2];
+        for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+          wt = getCondition(*i);
+          wlist.push_back(wt);
+        }
       }
       qm->update(str.c_str(), tt, vt, wlist);
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
@@ -286,11 +288,13 @@ void StmtNode::visit(){
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         slist.push_back(((*i)->str).c_str());
       }
-      ptr = subtree[2];
       wlist.clear();
-      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
-        wt = getCondition(*i);
-        wlist.push_back(wt);
+      if (subtree.size() >= 3) {
+        ptr = subtree[2];
+        for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+          wt = getCondition(*i);
+          wlist.push_back(wt);
+        }
       }
       qm->select(tlist, slist, wlist);
       for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
@@ -304,13 +308,18 @@ void StmtNode::visit(){
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         slist.push_back(((*i)->str).c_str());
       }
-      ptr = subtree[1];
       wlist.clear();
-      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
-        wt = getCondition(*i);
-        wlist.push_back(wt);
+      if (subtree.size() >= 2) {
+        ptr = subtree[1];
+        for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+          wt = getCondition(*i);
+          wlist.push_back(wt);
+        }
       }
       qm->select(tlist, slist, wlist);
+      for(std::vector<Condition>::iterator i = wlist.begin(); i != wlist.end(); ++i){
+        releaseCondition(*i);
+      }
       break;
     case SELECT_GROUP:
       ptr = subtree[0];
@@ -319,13 +328,16 @@ void StmtNode::visit(){
         ttex = getColumnExtension(*i);
         texlist.push_back(ttex);
       }
-      ptr = subtree[1];
       wlist.clear();
-      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
-        wt = getCondition(*i);
-        wlist.push_back(wt);
+      if (subtree.size() >= 3) {
+        ptr = subtree[2];
+        for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+          wt = getCondition(*i);
+          wlist.push_back(wt);
+        }
       }
-      qm->selectGB(texlist, primary.c_str(), str.c_str(), wlist);
+      ptr = subtree[1];
+      qm->selectGB(texlist, ((*(ptr->subtree.rbegin()))->str).c_str(), str.c_str(), wlist);
       break;
     case CONSTRIANT_CHECK:
       ptr = this;

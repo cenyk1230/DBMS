@@ -89,6 +89,11 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->stmttype = Node::DELETE_DATA;
   $$->str = $3->str;
   $$->subtree.assign($5->subtree.begin(), $5->subtree.end());
+} | DELETE FROM IDENTIFIER ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::DELETE_DATA;
+  $$->str = $3->str;
 } | UPDATE IDENTIFIER SET ColumnAccess EQU Value WHERE WhereClauseList ';'
 {
   $$ = new StmtNode();
@@ -97,13 +102,26 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->subtree.push_back($4);
   $$->subtree.push_back($6);
   $$->subtree.push_back($8);
-} | SELECT ColumnAccessList FROM IDENTIFIERLIST WHERE WhereClauseList ';'
+} | UPDATE IDENTIFIER SET ColumnAccess EQU Value ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::UPDATE_DATA;
+  $$->str = $2->str;
+  $$->subtree.push_back($4);
+  $$->subtree.push_back($6);
+} | SELECT GroupList FROM IDENTIFIERLIST WHERE WhereClauseList ';'
 {
   $$ = new StmtNode();
   $$->stmttype = Node::SELECT_DATA;
   $$->subtree.push_back($2);
   $$->subtree.push_back($4);
   $$->subtree.push_back($6);
+} | SELECT GroupList FROM IDENTIFIERLIST ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::SELECT_DATA;
+  $$->subtree.push_back($2);
+  $$->subtree.push_back($4);
 } | SELECT FROM IDENTIFIERLIST WHERE WhereClauseList ';'
 {
   $$ = new StmtNode();
@@ -116,14 +134,31 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->stmttype = Node::SELECT_DATA_ALL;
   $$->subtree.push_back($4);
   $$->subtree.push_back($6);
-} | SELECT GroupList FROM IDENTIFIER WHERE WhereClauseList GROUP BY IDENTIFIER ';'
+} | SELECT FROM IDENTIFIERLIST ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::SELECT_DATA_ALL;
+  $$->subtree.push_back($3);
+} | SELECT '*' FROM IDENTIFIERLIST ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::SELECT_DATA_ALL;
+  $$->subtree.push_back($4);
+} | SELECT GroupList FROM IDENTIFIERLIST WHERE WhereClauseList GROUP BY IDENTIFIER ';'
 {
   $$ = new StmtNode();
   $$->stmttype = Node::SELECT_GROUP;
-  $$->str = $4->str;
-  $$->primary = $9->str;
+  $$->str = $9->str;
   $$->subtree.push_back($2);
+  $$->subtree.push_back($4);
   $$->subtree.push_back($6);
+} | SELECT GroupList FROM IDENTIFIERLIST GROUP BY IDENTIFIER ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::SELECT_GROUP;
+  $$->str = $7->str;
+  $$->subtree.push_back($2);
+  $$->subtree.push_back($4);
 } | ALTER TABLE IDENTIFIER CHECK KEY IDENTIFIER IN '(' Row ')' ';'
 {
   $$ = new StmtNode();
@@ -255,17 +290,6 @@ GroupItem: ColumnAccess
   $$->datatype = $1->datatype;
   $$->str = $3->str;
   $$->primary = $3->primary;
-};
-
-
-ColumnAccessList: ColumnAccess
-{
-  $$ = new Node();
-  $$->subtree.push_back($1);
-} | ColumnAccess ',' ColumnAccessList
-{
-  $$ = $3;
-  $$->subtree.push_back($1);
 };
 
 

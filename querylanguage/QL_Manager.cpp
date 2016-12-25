@@ -25,6 +25,8 @@ vector<shared_ptr<RM_Record> > *selected;
 static int offset1;
 static int offset2;
 static int offset3;
+static int offset4;
+static int len4;
 static int ti1, ti2, ti3;
 
 bool cmp1(int i, int j) {
@@ -43,6 +45,12 @@ bool cmp3(const shared_ptr<RM_Record> &p1, const shared_ptr<RM_Record> &p2) {
     int v1 = *(int *)(p1->getData() + offset3);
     int v2 = *(int *)(p2->getData() + offset3);
     return v1 < v2;
+}
+
+bool cmp4(const shared_ptr<RM_Record> &p1, const shared_ptr<RM_Record> &p2) {
+    char *v1 = (char *)p1->getData() + offset4;
+    char *v2 = (char *)p2->getData() + offset4;
+    return strncmp(v1, v2, len4) < 0;
 }
 
 bool QL_Manager::select(std::vector<TableAttr> &attrs, 
@@ -206,7 +214,7 @@ bool QL_Manager::select(std::vector<TableAttr> &attrs,
             if (conditions[i].rIsValue)
                 continue;
             if (conditions[i].op != EQ_OP) {
-                fprintf(stdout, "select failed: wrong condition\n");
+                fprintf(stderr, "select failed: wrong condition\n");
                 delete[] isJoined;
                 delete[] infos;
                 delete[] selected;
@@ -240,7 +248,7 @@ bool QL_Manager::select(std::vector<TableAttr> &attrs,
                 }
             }
             if (ti1 == -1 || ti2 == -1) {
-                fprintf(stdout, "select failed: can't find the table in condition\n");
+                fprintf(stderr, "select failed: can't find the table in condition\n");
                 return false;
             }
             if (isJoined[ti2]) {
@@ -391,6 +399,7 @@ bool QL_Manager::selectGB(const std::vector<TableAttrEx> &attrs,
               const char *attrName,
               const std::vector<Condition> &conditions)
 {
+    //cout << tableName << " " << attrName << endl;
     string DBName = mSMManager->getDBName();
     if (DBName == "") {
         fprintf(stderr, "select failed: please USE database first.\n");
@@ -455,9 +464,11 @@ bool QL_Manager::selectGB(const std::vector<TableAttrEx> &attrs,
             break;
         }
     if (groupIndex == -1) {
-        fprintf(stdout, "select failed: can't find the grouped attribute");
+        fprintf(stderr, "select failed: can't find the grouped attribute");
         return false;
     }
+
+    //fprintf(stdout, "groupIndex = %d\n", groupIndex);
 
     int *attrIndex = new int[attrs.size()];
     for (int i = 0; i < attrs.size(); ++i) {
@@ -473,8 +484,15 @@ bool QL_Manager::selectGB(const std::vector<TableAttrEx> &attrs,
         }
     }
 
-    offset3 = attrInfos[groupIndex].offset;
-    sort(selectedGB.begin(), selectedGB.end(), cmp3);
+    if (attrInfos[groupIndex].attrType == INTEGER) {
+        offset3 = attrInfos[groupIndex].offset;
+        sort(selectedGB.begin(), selectedGB.end(), cmp3);
+    } else if (attrInfos[groupIndex].attrType == STRING) {
+        offset4 = attrInfos[groupIndex].offset;
+        len4 = attrInfos[groupIndex].attrLength;
+        sort(selectedGB.begin(), selectedGB.end(), cmp4);
+    }
+    
 
     vector<vector<Value> > res;
     vector<Value> tmpRes;
@@ -491,16 +509,16 @@ bool QL_Manager::selectGB(const std::vector<TableAttrEx> &attrs,
                     break;
                 }
             } else if (attrInfos[groupIndex].attrType == STRING) {
-                char *c1 = selectedGB[i]->getData() + offset3;
-                char *c2 = selectedGB[j + 1]->getData() + offset3;
+                char *c1 = selectedGB[i]->getData() + offset4;
+                char *c2 = selectedGB[j + 1]->getData() + offset4;
                 if (strncmp(c1, c2, attrInfos[groupIndex].attrLength) == 0) {
                     ++j;
                 } else {
                     break;
                 }
             }
-            
         }
+        //cout << i << " " << j << endl;
         tmpRes.clear();
         for (int z = 0; z < attrs.size(); ++z) {
             if (attrs[z].func == NO_FUNC) {
@@ -684,7 +702,7 @@ bool QL_Manager::insert(const char *tableName,
             bool dupFlag = indexHandle->findEntry(values[indexNo].data);
             //fprintf(stdout, "dupFlag = %d\n", dupFlag);
             if (dupFlag) {
-                fprintf(stdout, "insert failed: primary key %d has alreday existed\n", *(int *)values[indexNo].data);
+                fprintf(stderr, "insert failed: primary key %d has alreday existed\n", *(int *)values[indexNo].data);
                 continue;
             }
         }
@@ -704,7 +722,7 @@ bool QL_Manager::insert(const char *tableName,
                         }
                     }
                     if (outFlag) {
-                        fprintf(stdout, "insert failed: attribute %s can't be %s\n", attrInfos[i].attrName.c_str(), (char *)values[i].data);
+                        fprintf(stderr, "insert failed: attribute %s can't be %s\n", attrInfos[i].attrName.c_str(), (char *)values[i].data);
                         consFlag = true;
                         break;
                     }
@@ -712,7 +730,7 @@ bool QL_Manager::insert(const char *tableName,
                 if (attrInfos[i].isForeignKey) {
                     int v = *(int *)values[i].data;
                     if (v < rangeL[i] || v > rangeR[i]) {
-                        fprintf(stdout, "insert failed: attribute %s should be in foreign key constraint (%d, %d)\n", attrInfos[i].attrName.c_str(), rangeL[i], rangeR[i]);
+                        fprintf(stderr, "insert failed: attribute %s should be in foreign key constraint (%d, %d)\n", attrInfos[i].attrName.c_str(), rangeL[i], rangeR[i]);
                         consFlag = true;
                         break;
                     }
@@ -887,7 +905,7 @@ bool QL_Manager::update(const char *tableName,
             }
         }
         if (outFlag) {
-            fprintf(stdout, "update failed: attribute %s can't be %s\n", attrInfos[updateIndex].attrName.c_str(), (char *)value.data);
+            fprintf(stderr, "update failed: attribute %s can't be %s\n", attrInfos[updateIndex].attrName.c_str(), (char *)value.data);
             return false;
         }
     }
@@ -897,7 +915,7 @@ bool QL_Manager::update(const char *tableName,
         int l, r;
         getRange(attrInfos[updateIndex].foreignTable, attrInfos[updateIndex].foreignAttr, l, r);
         if (v < l || v > r) {
-            fprintf(stdout, "update failed: attribute %s should be in foreign key constraint (%d, %d)\n", attrInfos[updateIndex].attrName.c_str(), l, r);
+            fprintf(stderr, "update failed: attribute %s should be in foreign key constraint (%d, %d)\n", attrInfos[updateIndex].attrName.c_str(), l, r);
             return false;
         }
     }
