@@ -124,13 +124,13 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->primary = $9->str;
   $$->subtree.push_back($2);
   $$->subtree.push_back($6);
-} | ALTER TABLE IDENTIFIER CHECK KEY IDENTIFIER IN Row ';'
+} | ALTER TABLE IDENTIFIER CHECK KEY IDENTIFIER IN '(' Row ')' ';'
 {
   $$ = new StmtNode();
   $$->stmttype = Node::CONSTRIANT_CHECK;
   $$->primary = $3->str;
   $$->str = $6->str;
-  $$->subtree.assign($8->subtree.begin(), $8->subtree.end());
+  $$->subtree.assign($9->subtree.begin(), $9->subtree.end());
 } | ALTER TABLE IDENTIFIER FOREIGN KEY IDENTIFIER REFER ColumnAccess ';'
 {
   $$ = new StmtNode();

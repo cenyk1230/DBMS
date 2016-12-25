@@ -322,7 +322,7 @@ void StmtNode::visit(){
       qm->selectGB(texlist, primary.c_str(), str.c_str(), wlist);
       break;
     case CONSTRIANT_CHECK:
-      ptr = subtree[0];
+      ptr = this;
       vlist.clear();
       for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
         vt = getValue(*i);
