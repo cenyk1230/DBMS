@@ -40,10 +40,33 @@ CompOp opAdapt(int type){
   }
 }
 
+GroupFunc funcAdapt(int type){
+  switch(type){
+    case Node::FUNC_NO:
+      return GroupFunc::NO_FUNC;
+    case Node::FUNC_AVG:
+      return GroupFunc::AVG_FUNC;
+    case Node::FUNC_SUM:
+      return GroupFunc::SUM_FUNC;
+    case Node::FUNC_MIN:
+      return GroupFunc::MIN_FUNC;
+    case Node::FUNC_MAX:
+      return GroupFunc::MAX_FUNC;
+  }
+}
+
 TableAttr getColumn(Node *x){
   TableAttr res;
   res.attrName = (x->str).c_str();
   res.tableName = Node::getFlag(x->flag, 1) ? (x->primary).c_str() : NULL; 
+  return res;
+}
+
+TableAttrEx getColumnExtension(Node *x){
+  TableAttrEx res;
+  res.attrName = (x->str).c_str();
+  res.tableName = Node::getFlag(x->flag, 1) ? (x->primary).c_str() : NULL; 
+  res.func = funcAdapt(x->datatype);
   return res;
 }
 
@@ -156,6 +179,8 @@ void StmtNode::visit(){
   Condition wt;
   TableAttr tt;
   std::vector<TableAttr> tlist;
+  TableAttrEx ttex;
+  std::vector<TableAttrEx> texlist;
   std::vector<const char *> slist;
   Node *ptr;
   int *intp;
@@ -280,6 +305,40 @@ void StmtNode::visit(){
       }
       wlist.clear();
       qm->select(tlist, slist, wlist);
+      break;
+    case SELECT_GROUP:
+      ptr = subtree[0];
+      texlist.clear();
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        ttex = getColumnExtension(*i);
+        texlist.push_back(ttex);
+      }
+      ptr = subtree[1];
+      wlist.clear();
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        wt = getCondition(*i);
+        wlist.push_back(wt);
+      }
+      qm->selectGB(texlist, primary.c_str(), str.c_str(), wlist);
+      break;
+    case CONSTRIANT_CHECK:
+      ptr = subtree[0];
+      vlist.clear();
+      for(std::vector<Node *>::reverse_iterator i = ptr->subtree.rbegin(); i != ptr->subtree.rend(); ++i){
+        vt = getValue(*i);
+        vlist.push_back(vt);
+      }
+      tt.tableName = primary.c_str();
+      tt.attrName = str.c_str();
+      sm->alterCheck(tt, vlist);
+      break;
+    case CONSTRIANT_FOREIGN:
+      tt = getColumn(subtree[0]);
+      tlist.clear();
+      tlist.push_back(tt);
+      tt.tableName = primary.c_str();
+      tt.attrName = str.c_str();
+      sm->alterForeign(tt, tlist[0]);
       break;
     default:
       break;

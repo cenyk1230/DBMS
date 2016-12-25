@@ -106,6 +106,9 @@ class Node{
   const static int UPDATE_DATA = 10;
   const static int SELECT_DATA = 11;
   const static int SELECT_DATA_ALL = 12;
+  const static int SELECT_GROUP = 13;
+  const static int CONSTRIANT_CHECK = 14;
+  const static int CONSTRIANT_FOREIGN = 15;
 
   const static int OP_EQU = 0;
   const static int OP_NEQ = 1;
@@ -114,6 +117,13 @@ class Node{
   const static int OP_LES = 4;
   const static int OP_GTR = 5;
   const static int OP_LIKE = 6;
+
+  const static int FUNC_NO = 0;
+  const static int FUNC_AVG = 1;
+  const static int FUNC_SUM = 2;
+  const static int FUNC_MIN = 3;
+  const static int FUNC_MAX = 4;
+  
 
   int stmttype;
   int datatype;
@@ -424,32 +434,44 @@ class StmtListNode: public Node{
     DROP = 264,
     SHOW = 265,
     USE = 266,
-    DATABASES = 267,
-    SELECT = 268,
-    INSERT = 269,
-    INTO = 270,
-    UPDATE = 271,
-    DELETE = 272,
-    FROM = 273,
-    WHERE = 274,
-    VALUES = 275,
-    SET = 276,
-    NUMBER = 277,
-    CONSTSTR = 278,
-    AND = 279,
-    IS = 280,
-    NOT = 281,
-    NULLSIGN = 282,
-    EQU = 283,
-    NEQ = 284,
-    LEQ = 285,
-    GEQ = 286,
-    LES = 287,
-    GTR = 288,
-    INT_INPUT = 289,
-    VARCHAR_INPUT = 290,
-    FLOAT_INPUT = 291,
-    STRING_INPUT = 292
+    ALTER = 267,
+    DATABASES = 268,
+    SELECT = 269,
+    INSERT = 270,
+    INTO = 271,
+    UPDATE = 272,
+    DELETE = 273,
+    FROM = 274,
+    WHERE = 275,
+    VALUES = 276,
+    SET = 277,
+    GROUP = 278,
+    BY = 279,
+    CHECK = 280,
+    IN = 281,
+    FOREIGN = 282,
+    REFER = 283,
+    NUMBER = 284,
+    CONSTSTR = 285,
+    AND = 286,
+    IS = 287,
+    NOT = 288,
+    NULLSIGN = 289,
+    EQU = 290,
+    NEQ = 291,
+    LEQ = 292,
+    GEQ = 293,
+    LES = 294,
+    GTR = 295,
+    LIKE = 296,
+    AVG = 297,
+    SUM = 298,
+    MIN = 299,
+    MAX = 300,
+    INT_INPUT = 301,
+    VARCHAR_INPUT = 302,
+    FLOAT_INPUT = 303,
+    STRING_INPUT = 304
   };
 #endif
 

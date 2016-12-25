@@ -4,19 +4,19 @@
 
 extern Node* yylval;  
 %}  
-create [Cc][Rr][Ee][Aa][Tt][Ee]
-use "USE"
-drop "DROP"
-show "SHOW"
-table "TABLE"
-database "DATABASE"
-databases "DATABASES"
-primary "PRIMARY"
-key "KEY"
-is "IS"
-not "NOT"
+create (CREATE)|(create)
+use (USE)|(use)
+drop (DROP)|(drop)
+show (SHOW)|(show)
+table (TABLE)|(table)
+database (DATABASE)|(database)
+databases (DATABASES)|(databases)
+primary (PRIMARY)|(primary)
+key (KEY)|(key)
+is (IS)|(is)
+not (NOT)|(not)
 null (NULL)|(null)
-and "AND"
+and (AND)|(and)
 
 insert "INSERT"
 into "INTO"
@@ -27,8 +27,15 @@ update "UPDATE"
 select "SELECT"
 from "FROM"
 where "WHERE"
-set [Ss][Ee][Tt]
+set (SET)|(set)
+group (GROUP)|(group)
+by  (BY)|(by)
+alter (ALTER)|(alter)
 
+check (CHECK)|(check)
+in (IN)|(in)
+foreign (FOREIGN)|(foreign)
+refer (REFERENCES)|(references)
 
 comma ","
 semicolon ";"
@@ -45,10 +52,16 @@ leq "<="
 geq ">="
 les "<"
 gtr ">"
-like "LIKE"
+like (LIKE)|(like)
+
+avg (AVG)|(avg)
+sum (SUM)|(sum)
+min (MIN)|(min)
+max (MAX)|(max)
 
 lp "("
 rp ")"
+star "*"
 number ([0-9])+
 identifier [A-Za-z]([A-Za-z0-9_])*
 conststr '([^'])*'
@@ -79,6 +92,14 @@ whitespace ([ \n\t])+
 {from}    {return FROM;}
 {where}   {return WHERE;}
 {set}     {return SET;}
+{group}   {return GROUP;}
+{by}      {return BY;}
+{alter}   {return ALTER;}
+
+{check}   {return CHECK;}
+{in}   {return IN;}
+{foreign}   {return FOREIGN;}
+{refer}   {return REFER;}
 
 {comma}   {return ',';}
 {semicolon} {return ';';}
@@ -95,8 +116,15 @@ whitespace ([ \n\t])+
 {les}     {return LES;}
 {gtr}     {return GTR;}
 {like}    {return LIKE;}
+
+{avg}     {return AVG;}
+{sum}     {return SUM;}
+{min}     {return MIN;}
+{max}     {return MAX;}
+
 {lp}      {return '(';}
 {rp}      {return ')';}
+{star}    {return '*';}
 {number}  {yylval = new Node(); sscanf(yytext, "%d", &yylval->number); return NUMBER;}
 {conststr}  {
   yylval = new Node(); 

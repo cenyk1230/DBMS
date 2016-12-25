@@ -9,11 +9,13 @@ void yyerror(char* s);
 int yywrap();
 
 %}
-%token CREATE TABLE PRIMARY KEY IDENTIFIER DATABASE DROP SHOW USE 
-%token DATABASES SELECT INSERT INTO UPDATE DELETE FROM WHERE VALUES SET
+%token CREATE TABLE PRIMARY KEY IDENTIFIER DATABASE DROP SHOW USE ALTER
+%token DATABASES SELECT INSERT INTO UPDATE DELETE FROM WHERE VALUES SET GROUP BY
+%token CHECK IN FOREIGN REFER
 %token NUMBER CONSTSTR 
 %token AND IS NOT NULLSIGN
 %token EQU NEQ LEQ GEQ LES GTR LIKE
+%token AVG SUM MIN MAX
 %token INT_INPUT VARCHAR_INPUT FLOAT_INPUT STRING_INPUT
 %%
 
@@ -108,6 +110,34 @@ Stmt: CREATE DATABASE IDENTIFIER ';'
   $$->stmttype = Node::SELECT_DATA_ALL;
   $$->subtree.push_back($3);
   $$->subtree.push_back($5);
+} | SELECT '*' FROM IDENTIFIERLIST WHERE WhereClauseList ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::SELECT_DATA_ALL;
+  $$->subtree.push_back($4);
+  $$->subtree.push_back($6);
+} | SELECT GroupList FROM IDENTIFIER WHERE WhereClauseList GROUP BY IDENTIFIER ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::SELECT_GROUP;
+  $$->str = $4->str;
+  $$->primary = $9->str;
+  $$->subtree.push_back($2);
+  $$->subtree.push_back($6);
+} | ALTER TABLE IDENTIFIER CHECK KEY IDENTIFIER IN Row ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::CONSTRIANT_CHECK;
+  $$->primary = $3->str;
+  $$->str = $6->str;
+  $$->subtree.assign($8->subtree.begin(), $8->subtree.end());
+} | ALTER TABLE IDENTIFIER FOREIGN KEY IDENTIFIER REFER ColumnAccess ';'
+{
+  $$ = new StmtNode();
+  $$->stmttype = Node::CONSTRIANT_FOREIGN;
+  $$->primary = $3->str;
+  $$->str = $6->str;
+  $$->subtree.push_back($8);
 };
 
 Rows: '(' Row ')' ',' Rows
@@ -203,6 +233,31 @@ IDENTIFIERLIST: IDENTIFIER
   $$->subtree.push_back($1);
 };
 
+GroupList: GroupItem
+{
+  $$ = new Node();
+  $$->subtree.push_back($1);
+} | GroupItem ',' GroupList
+{
+  $$ = $3;
+  $$->subtree.push_back($1);
+};
+
+GroupItem: ColumnAccess
+{
+  $$ = new Node();
+  $$->datatype = Node::FUNC_NO;
+  $$->str = $1->str;
+  $$->primary = $1->primary;
+} | FUNC '(' ColumnAccess ')'
+{
+  $$ = new Node();
+  $$->datatype = $1->datatype;
+  $$->str = $3->str;
+  $$->primary = $3->primary;
+};
+
+
 ColumnAccessList: ColumnAccess
 {
   $$ = new Node();
@@ -295,6 +350,24 @@ Op: EQU {
   $$ = new Node();
   $$->datatype = Node::OP_LIKE; 
 };
+
+FUNC: AVG
+{
+  $$ = new Node();
+  $$->datatype = Node::FUNC_AVG;
+} | SUM
+{
+  $$ = new Node();
+  $$->datatype = Node::FUNC_SUM;
+} | MIN
+{
+  $$ = new Node();
+  $$->datatype = Node::FUNC_MIN;
+} | MAX
+{
+  $$ = new Node();
+  $$->datatype = Node::FUNC_MAX;
+}
 
 
 %%
