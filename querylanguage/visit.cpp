@@ -18,6 +18,8 @@ AttrType adapt(int type){
       return AttrType::STRING;
     case Node::NULLDATA:
       return AttrType::NOTYPE;
+    default:
+      return AttrType::NOTYPE;
   }
 }
 
@@ -37,6 +39,8 @@ CompOp opAdapt(int type){
       return CompOp::GT_OP;
     case Node::OP_LIKE:
       return CompOp::LK_OP;
+    default:
+      return CompOp::NO_OP;
   }
 }
 
@@ -52,6 +56,8 @@ GroupFunc funcAdapt(int type){
       return GroupFunc::MIN_FUNC;
     case Node::FUNC_MAX:
       return GroupFunc::MAX_FUNC;
+    default:
+      return GroupFunc::NO_FUNC;
   }
 }
 
