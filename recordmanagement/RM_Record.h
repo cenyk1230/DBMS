@@ -25,9 +25,9 @@ public:
 	}
 	RM_Record(const RM_Record &rec) {
 		// fprintf(stdout, "copy construction\n");
-		if (mData != NULL) {
-			delete[] mData;
-		}
+		//if (mData != NULL) {
+		//	delete[] mData;
+		//}
 		mSize = rec.getSize();
 		mData = new char[mSize];
 		memcpy(mData, rec.getData(), mSize);
