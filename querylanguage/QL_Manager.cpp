@@ -297,6 +297,32 @@ bool QL_Manager::select(std::vector<TableAttr> &attrs,
                     if (isJoined[ti1] && tables.size() > 2) {
                         selected2.push_back(selected[ti3][sortIndex[j]]);
                     }
+                    while (j + 1 < len1) {
+                        int v3 = *(int *)(selected[ti1][sortIndex[j + 1]]->getData() + offset1);
+                        if (v3 == v2) {
+                            ++j;
+                            selected0.push_back(selected[ti1][sortIndex[j]]);
+                            selected1.push_back(selected[ti2][k]);
+                            if (isJoined[ti1] && tables.size() > 2) {
+                                selected2.push_back(selected[ti3][sortIndex[j]]);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
+                    while (k + 1 < len2) {
+                        int v3 = *(int *)(selected[ti2][k + 1]->getData() + offset2);
+                        if (v3 == v1) {
+                            ++k;
+                            selected0.push_back(selected[ti1][sortIndex[j]]);
+                            selected1.push_back(selected[ti2][k]);
+                            if (isJoined[ti1] && tables.size() > 2) {
+                                selected2.push_back(selected[ti3][sortIndex[j]]);
+                            }
+                        } else {
+                            break;
+                        }
+                    }
                     ++j;
                     ++k;
                 } else if (v1 < v2) {
