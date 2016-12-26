@@ -72,6 +72,12 @@ bool QL_Manager::select(std::vector<TableAttr> &attrs,
     selected = new vector<shared_ptr<RM_Record> >[tables.size()];
 
     //cout << "attrs.size() = " << attrs.size() << endl;
+    // for (int i = 0; i < attrs.size(); ++i) {
+    //     if (attrs[i].tableName != NULL)
+    //         cout << attrs[i].tableName << " " << attrs[i].attrName << endl;
+    //     else 
+    //         cout << attrs[i].attrName << endl;
+    // }
 
     vector<shared_ptr<string> > saves;
     if (attrs.size() == 0) {
@@ -391,6 +397,7 @@ bool QL_Manager::select(std::vector<TableAttr> &attrs,
         delete[] infos;
     }
     delete[] selected;
+    fprintf(stderr, "select finished\n");
     return true;
 }
 
@@ -614,6 +621,7 @@ bool QL_Manager::selectGB(const std::vector<TableAttrEx> &attrs,
     }
     fprintf(stdout, "\n");
 
+    fprintf(stderr, "select finished\n");
     delete[] attrIndex;
     return true;
 }
@@ -767,6 +775,7 @@ bool QL_Manager::insert(const char *tableName,
         mIXManager->closeIndex(indexHandle);
     }
 
+    fprintf(stderr, "insert finished\n");
     //cout << "leave QL_Manager::insert" << endl;
     return true;
 }
@@ -839,6 +848,8 @@ bool QL_Manager::remove(const char *tableName,
     if (indexNo != -1) {
         mIXManager->closeIndex(indexHandle);
     }
+
+    fprintf(stderr, "delete finished\n");
     //cout << "leave QL_Manager::remove" << endl;
     return true;
 }
@@ -952,6 +963,8 @@ bool QL_Manager::update(const char *tableName,
     if (indexNo != -1) {
         mIXManager->closeIndex(indexHandle);
     }
+
+    fprintf(stderr, "update finished\n");
     return true;
 }
 

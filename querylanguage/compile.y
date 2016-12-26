@@ -284,12 +284,14 @@ GroupItem: ColumnAccess
   $$->datatype = Node::FUNC_NO;
   $$->str = $1->str;
   $$->primary = $1->primary;
+  $$->flag = $1->flag;
 } | FUNC '(' ColumnAccess ')'
 {
   $$ = new Node();
   $$->datatype = $1->datatype;
   $$->str = $3->str;
   $$->primary = $3->primary;
+  $$->flag = $3->flag;
 };
 
 
