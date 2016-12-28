@@ -38,6 +38,7 @@ bool SM_Manager::createDB(const char *DBName) {
     sprintf(attrcat, "%s/attrcat", DBName);
     mRMManager->createFile(attrcat, MAX_NAME_LEN * 2 + 20 + 4 + MAX_NAME_LEN * 2 + 4 + MAX_ATTR_LEN);
 
+    fprintf(stderr, "create database %s finished\n", DBName);
     return true;
 }
 
@@ -46,10 +47,14 @@ bool SM_Manager::dropDB(const char *DBName) {
     char command[MAX_NAME_LEN + 20];
     sprintf(command, "rm -r %s", DBName);
     system(command);
+    fprintf(stderr, "drop database %s finished\n", DBName);
     return true;
 }
 
 bool SM_Manager::useDB(const char *DBName) {
+    FILE *DBFile = fopen("DBUSE.tmp", "w");
+    fprintf(DBFile, "%s", DBName);
+    fclose(DBFile);
     mDBName = string(DBName);
     return true;
 }
@@ -78,6 +83,7 @@ bool SM_Manager::showDB(const char *DBName) {
 
 bool SM_Manager::createTable(const char *tableName, const char *primaryKey, const vector<AttrInfo> &attributes) {
     //cerr << "SM_Manager::createTable begin" << endl;
+    getDBName();
     assert(mDBName != "");
 
     int attrCount = attributes.size();
@@ -157,10 +163,12 @@ bool SM_Manager::createTable(const char *tableName, const char *primaryKey, cons
     }
     mRMManager->closeFile(handle);
     //cerr << "SM_Manager::createTable end" << endl;
+    fprintf(stderr, "create table %s finished\n", tableName);
     return true;
 }
 
 bool SM_Manager::dropTable(const char *tableName) {
+    getDBName();
     RM_FileHandle *handle;
     string relcat = mDBName + "/relcat";
     mRMManager->openFile(relcat.c_str(), handle);
@@ -186,10 +194,13 @@ bool SM_Manager::dropTable(const char *tableName) {
     string fullTableName = mDBName + "/" + string(tableName);
     if (indexNo != -1)
         mIXManager->destroyIndex(fullTableName.c_str(), indexNo);
-    return mRMManager->destroyFile(fullTableName.c_str());
+    bool resFlag = mRMManager->destroyFile(fullTableName.c_str());
+    fprintf(stderr, "drop table %s finished\n", tableName);
+    return resFlag;
 }
 
 bool SM_Manager::showTable(const char *tableName) {
+    getDBName();
     RM_FileHandle *handle;
     string attrcat = mDBName + "/attrcat"; 
     mRMManager->openFile(attrcat.c_str(), handle);
@@ -226,11 +237,19 @@ bool SM_Manager::showTable(const char *tableName) {
 }
 
 string SM_Manager::getDBName() {
+    if (mDBName == "") {
+        FILE *DBFile = fopen("DBUSE.tmp", "r");
+        char DBName[20];
+        fscanf(DBFile, "%s", DBName);
+        fclose(DBFile);
+        mDBName = string(DBName);
+    }
     return mDBName;
 }
 
 bool SM_Manager::alterCheck(TableAttr tableAttr, const std::vector<Value> &values) {
     //fprintf(stdout, "enter SM_Manager::alterCheck\n");
+    getDBName();
     RM_FileHandle *handle;
     string attrcat = mDBName + "/attrcat"; 
     mRMManager->openFile(attrcat.c_str(), handle);
@@ -277,6 +296,7 @@ bool SM_Manager::alterForeign(TableAttr tableAttr, TableAttr foreignAttr) {
     //fprintf(stdout, "enter SM_Manager::alterForeign\n");
     //fprintf(stdout, "%s\n%s\n", tableAttr.tableName, tableAttr.attrName);
     //fprintf(stdout, "%s\n%s\n", foreignAttr.tableName, foreignAttr.attrName);
+    getDBName();
     RM_FileHandle *handle;
     string attrcat = mDBName + "/attrcat"; 
     mRMManager->openFile(attrcat.c_str(), handle);

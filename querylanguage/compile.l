@@ -18,15 +18,15 @@ not (NOT)|(not)
 null (NULL)|(null)
 and (AND)|(and)
 
-insert "INSERT"
-into "INTO"
-values "VALUES"
+insert (INSERT)|(insert)
+into (INTO)|(into)
+values (VALUES)|(values)
 
-delete "DELETE"
-update "UPDATE"
-select "SELECT"
-from "FROM"
-where "WHERE"
+delete (DELETE)|(delete)
+update (UPDATE)|(update)
+select (SELECT)|(select)
+from (FROM)|(from)
+where (WHERE)|(where)
 set (SET)|(set)
 group (GROUP)|(group)
 by  (BY)|(by)
