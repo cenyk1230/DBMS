@@ -361,6 +361,11 @@ void BPlusTree::getRange(int &l, int &r) {
     BPlusNode *node1 = getFirstDataNode();
     BPlusNode *node2 = getLastDataNode();
     //cout << node1 << " " << node2 << " " << node1->num << endl;
+    if (node1->num == 0 || node2->num == 0) {
+        l = 1;
+        r = 0;
+        return;
+    }
     l = *(int *)node1->key[0];
     r = *(int *)node2->key[node2->num - 1];
     //cout << l << " " << r << endl;

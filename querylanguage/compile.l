@@ -143,5 +143,5 @@ whitespace ([ \n\t])+
 }
 {whitespace}    ;
 
-. {printf("Error");exit(1);}    
+. {printf("Error\n");exit(1);}    
 %% 

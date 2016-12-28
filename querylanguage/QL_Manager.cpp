@@ -763,8 +763,13 @@ bool QL_Manager::insert(const char *tableName,
                 }
                 if (attrInfos[i].isForeignKey) {
                     int v = *(int *)values[i].data;
+                    if (rangeL[i] == 1 && rangeR[i] == 0) {
+                        fprintf(stderr, "insert failed: attribute %s must satisfy the foreign key constraint\n", attrInfos[i].attrName.c_str());
+                        consFlag = true;
+                        break;
+                    }
                     if (v < rangeL[i] || v > rangeR[i]) {
-                        fprintf(stderr, "insert failed: attribute %s should be in foreign key constraint (%d, %d)\n", attrInfos[i].attrName.c_str(), rangeL[i], rangeR[i]);
+                        fprintf(stderr, "insert failed: attribute %s must satisfy the foreign key constraint (%d, %d)\n", attrInfos[i].attrName.c_str(), rangeL[i], rangeR[i]);
                         consFlag = true;
                         break;
                     }
@@ -952,7 +957,7 @@ bool QL_Manager::update(const char *tableName,
         int l, r;
         getRange(attrInfos[updateIndex].foreignTable, attrInfos[updateIndex].foreignAttr, l, r);
         if (v < l || v > r) {
-            fprintf(stderr, "update failed: attribute %s should be in foreign key constraint (%d, %d)\n", attrInfos[updateIndex].attrName.c_str(), l, r);
+            fprintf(stderr, "update failed: attribute %s must satisfy the foreign key constraint (%d, %d)\n", attrInfos[updateIndex].attrName.c_str(), l, r);
             return false;
         }
     }
