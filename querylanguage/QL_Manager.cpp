@@ -956,6 +956,10 @@ bool QL_Manager::update(const char *tableName,
         int v = *(int *)value.data;
         int l, r;
         getRange(attrInfos[updateIndex].foreignTable, attrInfos[updateIndex].foreignAttr, l, r);
+        if (l == 1 && r == 0) {
+            fprintf(stderr, "update failed: attribute %s must satisfy the foreign key constraint\n", attrInfos[updateIndex].attrName.c_str());
+            return false;
+        }
         if (v < l || v > r) {
             fprintf(stderr, "update failed: attribute %s must satisfy the foreign key constraint (%d, %d)\n", attrInfos[updateIndex].attrName.c_str(), l, r);
             return false;
