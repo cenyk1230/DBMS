@@ -6,6 +6,8 @@
 extern int yyparse();
 extern void yyset_in (FILE *  _in_str );
 
+// #define USE_QT
+
 FileManager *fm;
 BufPageManager *bpm;
 RM_Manager *rm;
@@ -54,10 +56,20 @@ int main(int argc, char* argv[]){
   //   fclose(fin);
   // }
   FILE *fin;
-  if(argc < 2)
-    fin = stdin;
-  else
+  if(argc < 2) {
+    #ifdef USE_QT
+      fprintf(stderr, "file name can't be empty\n");
+      return -2;
+    #else
+      fin = stdin;
+    #endif
+  }
+  else 
     fin = fopen(argv[1], "r");
+  if (fin == NULL) {
+    fprintf(stderr, "file %s does not exist\n", argv[1]);
+    return -1;
+  }
   yyset_in(fin);
   MyBitMap::initConst();
   fm = new FileManager();
